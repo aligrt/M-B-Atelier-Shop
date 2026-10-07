@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+:root {
+  /* Brushed Rose Gold & Copper Metallic System (As per M&B Atelier brand image) */
+  --color-charcoal: #16181B;
+  --color-charcoal-deep: #111315;
+  --color-slate-dark: #20242A;
+  --color-copper: #C88D76;
+  --color-copper-light: #E2B29F;
+  --color-copper-dark: #9C5B42;
+  --color-rose-gold: #D49D87;
+  --color-ivory: #F8F7F4;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #14171A;
+  color: #F3F4F6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: 'Montserrat', serif, sans-serif;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Metallic Copper Gradient Text Utilities */
+.text-copper-gradient {
+  background: linear-gradient(135deg, #F5D2C4 0%, #C88D76 50%, #A86C55 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Copper Metallic Border Glow */
+.copper-border-glow {
+  box-shadow: 0 0 15px -3px rgba(200, 141, 118, 0.25);
+}
+
+/* Custom scrollbar with copper thumb */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #16181B;
+}
+::-webkit-scrollbar-thumb {
+  background: #252A30;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C88D76;
+}
