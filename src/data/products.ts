@@ -4,6 +4,7 @@ import metroImg from '../assets/images/product_metro_commuter_1791391565431.jpg'
 import techExecImg from '../assets/images/product_tech_exec_1791391581865.jpg';
 import slingImg from '../assets/images/product_urban_sling_1791391596666.jpg';
 import craftsmanshipImg from '../assets/images/craftsmanship_sialkot_1791391611997.jpg';
+import brandLogo3dImg from '../assets/images/brand_logo_3d_rosegold.jpg';
 
 export const ASSET_IMAGES = {
   hero: heroImg,
@@ -11,6 +12,7 @@ export const ASSET_IMAGES = {
   techExec: techExecImg,
   sling: slingImg,
   craftsmanship: craftsmanshipImg,
+  brandLogo3d: brandLogo3dImg,
 };
 
 export const STORE_PHONE_NUMBER = '923008472910';

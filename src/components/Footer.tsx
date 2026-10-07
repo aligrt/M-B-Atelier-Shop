@@ -82,6 +82,14 @@ export const Footer: React.FC<FooterProps> = ({ onScrollToSection }) => {
               </li>
               <li>
                 <button
+                  onClick={() => onScrollToSection('tracking')}
+                  className="hover:text-[#E2B29F] text-[#E2B29F] font-semibold transition-colors cursor-pointer"
+                >
+                  Live Order Tracking 🚚
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => onScrollToSection('faq')}
                   className="hover:text-white transition-colors cursor-pointer"
                 >

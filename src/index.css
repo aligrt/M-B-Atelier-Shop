@@ -1,15 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  /* Brushed Rose Gold & Copper Metallic System (As per M&B Atelier brand image) */
+  /* Brushed Rose Gold & Copper Metallic System (As per M&B Atelier brand image: #C5832B & #C88D76) */
   --color-charcoal: #16181B;
   --color-charcoal-deep: #111315;
   --color-slate-dark: #20242A;
+  --color-rose-gold-primary: #C5832B;
   --color-copper: #C88D76;
   --color-copper-light: #E2B29F;
   --color-copper-dark: #9C5B42;
-  --color-rose-gold: #D49D87;
+  --color-rose-gold: #C5832B;
   --color-ivory: #F8F7F4;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {

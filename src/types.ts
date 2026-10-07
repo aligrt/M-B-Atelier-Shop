@@ -40,6 +40,18 @@ export interface OrderDetails {
   total: number;
   createdAt: string;
   paymentMethod: 'COD';
+  status?: 'processing' | 'dispatched' | 'out_for_delivery' | 'delivered';
+  courier?: 'Trax Logistics' | 'TCS Express' | 'Leopards Courier';
+  trackingNumber?: string;
+}
+
+export interface TrackingTimelineEvent {
+  title: string;
+  location: string;
+  time: string;
+  completed: boolean;
+  current?: boolean;
+  description: string;
 }
 
 export interface Review {

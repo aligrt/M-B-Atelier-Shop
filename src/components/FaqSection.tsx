@@ -1,12 +1,29 @@
 import React, { useState } from 'react';
-import { ChevronDown, HelpCircle, PhoneCall } from 'lucide-react';
+import { ChevronDown, HelpCircle, PhoneCall, Truck, Search, ArrowRight } from 'lucide-react';
 import { FAQS, STORE_PHONE_NUMBER } from '../data/products';
 
-export const FaqSection: React.FC = () => {
+interface FaqSectionProps {
+  onTrackOrder?: (orderId: string) => void;
+}
+
+export const FaqSection: React.FC<FaqSectionProps> = ({ onTrackOrder }) => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
+  const [quickOrderId, setQuickOrderId] = useState('');
 
   const toggle = (idx: number) => {
     setOpenIdx(openIdx === idx ? null : idx);
+  };
+
+  const handleQuickTrack = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (quickOrderId.trim() && onTrackOrder) {
+      onTrackOrder(quickOrderId.trim());
+    } else {
+      const trackingEl = document.getElementById('tracking');
+      if (trackingEl) {
+        trackingEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
   };
 
   return (
@@ -14,7 +31,7 @@ export const FaqSection: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center mb-10 sm:mb-14">
+        <div className="text-center mb-10 sm:mb-12">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#14171A] border border-[#2B3038] text-xs font-bold uppercase tracking-wider text-[#E2B29F] mb-3">
             <HelpCircle className="w-3.5 h-3.5 text-[#C88D76]" />
             <span>Got Questions?</span>
@@ -25,6 +42,43 @@ export const FaqSection: React.FC = () => {
           <p className="text-sm text-neutral-400 mt-2">
             Everything you need to know about Cash on Delivery, doorstep inspection, and our Sialkot & Lahore warranty.
           </p>
+        </div>
+
+        {/* Quick Order Tracking Utility Banner inside FAQ */}
+        <div className="mb-10 p-5 bg-[#14171A] border border-[#C88D76]/50 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#1C2025] border border-[#2B3038] flex items-center justify-center text-[#E2B29F] shrink-0">
+              <Truck className="w-5 h-5 text-[#C88D76]" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-sm text-white">
+                Looking to track your active delivery?
+              </h3>
+              <p className="text-xs text-neutral-400">
+                Enter your Order ID (e.g., <span className="font-mono text-[#E2B29F]">MBA-8492</span>) to see live courier milestones.
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleQuickTrack} className="w-full md:w-auto flex items-center gap-2">
+            <div className="relative flex-1 md:w-56">
+              <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={quickOrderId}
+                onChange={(e) => setQuickOrderId(e.target.value)}
+                placeholder="Order ID (e.g. MBA-8492)"
+                className="w-full pl-9 pr-3 py-2 bg-[#1C2025] border border-[#2B3038] focus:border-[#C88D76] rounded-xl text-xs text-white uppercase outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-gradient-to-r from-[#DF9B84] to-[#C88D76] hover:from-[#F0C0B0] hover:to-[#D49D87] text-neutral-950 font-bold text-xs rounded-xl transition-all shrink-0 cursor-pointer flex items-center gap-1 shadow-sm"
+            >
+              <span>Track</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </form>
         </div>
 
         {/* Accordion list */}

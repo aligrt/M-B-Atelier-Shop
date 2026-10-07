@@ -43,7 +43,7 @@ export const TrustBadges: React.FC = () => {
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
-          <p className="text-xs uppercase tracking-wider text-[#E2B29F] font-bold mb-1">
+          <p className="text-xs uppercase tracking-wider text-[#C5832B] font-bold mb-1">
             Built for Pakistani Realities
           </p>
           <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
@@ -65,15 +65,15 @@ export const TrustBadges: React.FC = () => {
                 onClick={() => setActiveInfo(isOpen ? null : idx)}
                 className={`relative rounded-2xl p-6 bg-[#1C2025] border transition-all duration-300 cursor-pointer text-left ${
                   isOpen
-                    ? 'border-[#C88D76] shadow-lg shadow-[#C88D76]/15 ring-1 ring-[#C88D76]/50'
-                    : 'border-[#2B3038] hover:border-neutral-500 hover:bg-[#20252C]'
+                    ? 'border-[#C5832B] shadow-lg shadow-[#C5832B]/15 ring-1 ring-[#C5832B]/50'
+                    : 'border-[#2B3038] hover:border-[#C5832B]/40 hover:bg-[#20252C]'
                 }`}
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#14171A] border border-[#2B3038] flex items-center justify-center text-[#E2B29F]">
+                  <div className="w-12 h-12 rounded-xl bg-[#14171A] border border-[#2B3038] flex items-center justify-center text-[#C5832B]">
                     <Icon className="w-6 h-6" />
                   </div>
-                  <span className="text-[11px] font-semibold text-[#E2B29F] bg-[#14171A] px-2.5 py-1 rounded border border-[#C88D76]/30">
+                  <span className="text-[11px] font-semibold text-[#E2B29F] bg-[#14171A] px-2.5 py-1 rounded border border-[#C5832B]/30">
                     {badge.badgeTag}
                   </span>
                 </div>
@@ -82,7 +82,7 @@ export const TrustBadges: React.FC = () => {
                   <span>{badge.title}</span>
                   <ChevronDown
                     className={`w-4 h-4 text-neutral-400 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 text-[#E2B29F]' : ''
+                      isOpen ? 'rotate-180 text-[#C5832B]' : ''
                     }`}
                   />
                 </h3>
@@ -104,7 +104,7 @@ export const TrustBadges: React.FC = () => {
                   </div>
                 )}
 
-                <div className="mt-2 text-[11px] text-[#E2B29F] font-medium flex items-center gap-1">
+                <div className="mt-2 text-[11px] text-[#C5832B] font-medium flex items-center gap-1">
                   <span>{isOpen ? 'Tap to collapse' : 'Tap to read full policy'}</span>
                 </div>
               </div>

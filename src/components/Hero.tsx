@@ -17,62 +17,44 @@ export const Hero: React.FC<HeroProps> = ({ onShopModel1, onExploreCatalog }) =>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Brand Identity Spotlight Banner (Matching uploaded brand image) */}
-        <div className="mb-10 lg:mb-14 p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-[#1C1F24] to-[#15181C] border border-[#2B3038] shadow-2xl relative overflow-hidden">
+        {/* Main 3D Rose-Gold Hero Branding Showcase Banner */}
+        <div className="mb-10 lg:mb-14 relative w-full rounded-2xl overflow-hidden border border-[#C5832B]/50 shadow-2xl bg-[#14171A]">
           {/* Top subtle copper accent line */}
-          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#C88D76] to-transparent opacity-80" />
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#C5832B] to-transparent opacity-80 z-20" />
 
-          {/* Top timestamp / location header */}
-          <div className="flex items-center justify-between text-[11px] text-neutral-400 border-b border-[#2B3038] pb-3 mb-6">
-            <div className="flex items-center gap-1.5 text-neutral-300">
+          {/* Location badge overlay */}
+          <div className="absolute top-4 left-4 sm:left-6 z-20 flex items-center gap-2">
+            <span className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider bg-black/80 backdrop-blur-md text-[#E2B29F] border border-[#C5832B]/40 rounded-md flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Lahore Atelier · Verified Pakistani D2C</span>
-            </div>
-            <div className="font-mono text-neutral-400">
-              EST. 2026 | LAHORE, PAKISTAN
-            </div>
+              Lahore Atelier · Verified Pakistani D2C
+            </span>
           </div>
 
-          {/* Main 3-Part Brand Architecture */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center text-center lg:text-left">
-            
-            {/* Left: Roundel Seal */}
-            <div className="lg:col-span-3 flex justify-center lg:justify-start">
-              <BrandLogo variant="roundel" />
-            </div>
-
-            {/* Center: Hero Monogram & Wordmark */}
-            <div className="lg:col-span-6 flex flex-col items-center justify-center text-center">
-              <BrandLogo variant="mark" size="xl" />
-              
-              <h1 className="font-display font-extrabold text-2xl sm:text-4xl lg:text-5xl tracking-[0.22em] text-white uppercase mt-2 text-balance leading-none">
-                M&B ATELIER
-              </h1>
-              
-              <p className="text-xs sm:text-sm tracking-[0.18em] font-semibold text-[#E2B29F] mt-1.5">
-                mbatelier.shop
-              </p>
-
-              <div className="mt-4 px-4 py-1.5 rounded-full bg-[#14171A] border border-[#C88D76]/40 inline-flex items-center gap-2 text-xs text-neutral-200">
-                <span className="text-[#E2B29F] font-semibold">M&B Atelier</span>
-                <span className="text-neutral-500">|</span>
-                <span>Functional Luxury. Built for the Daily Grind.</span>
-              </div>
-            </div>
-
-            {/* Right: Tactical Falcon Emblem Card */}
-            <div className="lg:col-span-3 flex justify-center lg:justify-end">
-              <BrandLogo variant="falcon" className="w-56" />
-            </div>
-
+          <div className="absolute top-4 right-4 sm:right-6 z-20 font-mono text-[11px] text-neutral-300 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-md border border-neutral-700">
+            EST. 2026 | LAHORE, PAKISTAN
           </div>
 
-          {/* 3 Pillar Cards (As shown in uploaded image reference) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-6 border-t border-[#2B3038]">
+          {/* Main Hero Banner image wrapper with centered rose-gold 3D asset */}
+          <div className="relative flex items-center justify-center bg-[#15171B]" style={{ width: '100%', height: '100%', minHeight: '380px', objectFit: 'cover', objectPosition: 'center', borderRadius: '12px', overflow: 'hidden' }}>
+            <img
+              src={ASSET_IMAGES.brandLogo3d}
+              alt="M&B Atelier - 3D Rose Gold Emblem Showcase"
+              className="w-full h-full object-cover object-center max-h-[500px]"
+              style={{ width: '100%', height: '100%', minHeight: '380px', objectFit: 'cover', objectPosition: 'center', borderRadius: '12px' }}
+              referrerPolicy="no-referrer"
+              loading="eager"
+            />
+            {/* Elegant vignette and subtle radial backdrop scrim */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#14171A]/80 via-transparent to-black/30 pointer-events-none" />
+            <div className="absolute inset-0 ring-1 ring-inset ring-white/10 pointer-events-none rounded-xl" />
+          </div>
+
+          {/* 3 Pillar Cards (As per brand architecture) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 sm:p-6 bg-[#181B1F] border-t border-[#2B3038]">
             
             {/* Pillar [1] */}
-            <div className="bg-[#F8F7F4] text-[#14171A] p-5 rounded-2xl shadow-lg border border-neutral-300 flex flex-col justify-between">
-              <span className="text-xs font-mono font-bold text-neutral-500 mb-2">[1]</span>
+            <div className="bg-[#F8F7F4] text-[#14171A] p-5 rounded-xl shadow-md border border-neutral-300 flex flex-col justify-between">
+              <span className="text-xs font-mono font-bold text-[#C5832B] mb-2">[1]</span>
               <div>
                 <h3 className="font-display font-extrabold text-base sm:text-lg text-[#16181B] leading-tight">
                   Proven Against Pakistan: Bike, Rain, Thief-Proof.
@@ -84,8 +66,8 @@ export const Hero: React.FC<HeroProps> = ({ onShopModel1, onExploreCatalog }) =>
             </div>
 
             {/* Pillar [2] */}
-            <div className="bg-[#F8F7F4] text-[#14171A] p-5 rounded-2xl shadow-lg border border-neutral-300 flex flex-col justify-between">
-              <span className="text-xs font-mono font-bold text-neutral-500 mb-2">[2]</span>
+            <div className="bg-[#F8F7F4] text-[#14171A] p-5 rounded-xl shadow-md border border-neutral-300 flex flex-col justify-between">
+              <span className="text-xs font-mono font-bold text-[#C5832B] mb-2">[2]</span>
               <div>
                 <h3 className="font-display font-extrabold text-base sm:text-lg text-[#16181B] leading-tight">
                   Carry the City. Not the Load.
@@ -97,8 +79,8 @@ export const Hero: React.FC<HeroProps> = ({ onShopModel1, onExploreCatalog }) =>
             </div>
 
             {/* Pillar [3] */}
-            <div className="bg-[#F8F7F4] text-[#14171A] p-5 rounded-2xl shadow-lg border border-neutral-300 flex flex-col justify-between">
-              <span className="text-xs font-mono font-bold text-neutral-500 mb-2">[3]</span>
+            <div className="bg-[#F8F7F4] text-[#14171A] p-5 rounded-xl shadow-md border border-neutral-300 flex flex-col justify-between">
+              <span className="text-xs font-mono font-bold text-[#C5832B] mb-2">[3]</span>
               <div>
                 <h3 className="font-display font-extrabold text-base sm:text-lg text-[#16181B] leading-tight">
                   Sialkot Tough. D2C Smooth. 1-Year Local Warranty.

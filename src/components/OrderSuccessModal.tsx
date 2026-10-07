@@ -1,15 +1,26 @@
-import React from 'react';
-import { CheckCircle2, MessageSquare, Copy, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, MessageSquare, Copy, Check, Truck, ShieldCheck } from 'lucide-react';
 import { OrderDetails } from '../types';
 import { STORE_PHONE_NUMBER } from '../data/products';
+import { PostPurchaseUpsellCard } from './PostPurchaseUpsellCard';
 
 interface OrderSuccessModalProps {
   order: OrderDetails | null;
   onClose: () => void;
+  onTrackOrder?: (orderId: string) => void;
 }
 
-export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onClose }) => {
-  const [copied, setCopied] = React.useState(false);
+export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onClose, onTrackOrder }) => {
+  const [copied, setCopied] = useState(false);
+  const [currentTotal, setCurrentTotal] = useState<number>(order?.total || 0);
+  const [addedAddon, setAddedAddon] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (order) {
+      setCurrentTotal(order.total);
+      setAddedAddon(null);
+    }
+  }, [order]);
 
   if (!order) return null;
 
@@ -19,8 +30,13 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleUpsellApplied = (newTotal: number, itemName: string) => {
+    setCurrentTotal(newTotal);
+    setAddedAddon(itemName);
+  };
+
   const whatsappMessage = encodeURIComponent(
-    `Hello M&B Atelier! I just placed COD Order *${order.orderId}* for PKR ${order.total.toLocaleString()}. Please confirm dispatch status.`
+    `Hello M&B Atelier! I just placed COD Order *${order.orderId}* for PKR ${currentTotal.toLocaleString()}. Please confirm dispatch status.`
   );
 
   return (
@@ -63,7 +79,14 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
 
           {/* Details */}
           <div className="px-6 py-5 space-y-5">
-            {/* Delivery Alert */}
+            
+            {/* Feature 3: Post-Purchase One-Click COD Upsell Offer Banner */}
+            <PostPurchaseUpsellCard
+              orderId={order.orderId}
+              onUpsellApplied={handleUpsellApplied}
+            />
+
+            {/* Delivery Alert & Total */}
             <div className="bg-[#14171A] p-4 rounded-xl border border-[#2B3038] space-y-2 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-neutral-400">Destination:</span>
@@ -76,9 +99,15 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
               <div className="flex items-center justify-between">
                 <span className="text-neutral-400">Payment Due on Delivery:</span>
                 <span className="font-bold text-[#E2B29F] tabular-nums text-sm">
-                  PKR {order.total.toLocaleString()}
+                  PKR {currentTotal.toLocaleString()}
                 </span>
               </div>
+              {addedAddon && (
+                <div className="flex items-center justify-between text-emerald-400 font-semibold pt-1">
+                  <span>Included Add-On:</span>
+                  <span>+ {addedAddon} (Zero Shipping)</span>
+                </div>
+              )}
               <div className="pt-2 border-t border-[#2B3038] text-neutral-300">
                 <span className="text-neutral-500 block mb-0.5">Shipping Address:</span>
                 <p className="line-clamp-2">{order.address}</p>
@@ -96,7 +125,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
                     1
                   </div>
                   <div>
-                    <strong className="text-white">Same-Day Dispatch:</strong> Your bag is packed at our Sialkot and Lahore atelier and handed to TCS / Trax Courier with tracking.
+                    <strong className="text-white">Same-Day Dispatch:</strong> Your bag is packed at our Sialkot and Lahore atelier and handed to Trax / CallCourier with live tracking.
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5">
@@ -108,11 +137,11 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <div className="w-5 h-5 rounded-full bg-[#1C2025] border border-[#2B3038] text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                  <div className="w-5 h-5 rounded-full bg-emerald-950/80 border border-emerald-800 text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                     3
                   </div>
                   <div>
-                    <strong className="text-emerald-300">Open-Parcel Check:</strong> Open flyer, inspect laptop sleeve & zippers, then hand cash to rider.
+                    <strong className="text-emerald-300">Open-Parcel Check:</strong> Inspect bag material, zippers, and tech sleeve in front of the rider before paying cash.
                   </div>
                 </div>
               </div>
@@ -129,6 +158,20 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
                 <MessageSquare className="w-4 h-4" />
                 <span>Confirm Status on WhatsApp</span>
               </a>
+
+              {onTrackOrder && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onTrackOrder(order.orderId);
+                    onClose();
+                  }}
+                  className="w-full py-2.5 px-4 bg-[#14171A] hover:bg-[#1C2025] border border-[#C88D76]/50 text-[#E2B29F] hover:text-white text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                >
+                  <Truck className="w-4 h-4 text-[#C88D76]" />
+                  <span>Track Live Courier Milestones ({order.orderId})</span>
+                </button>
+              )}
 
               <button
                 onClick={onClose}
