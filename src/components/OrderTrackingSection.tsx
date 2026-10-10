@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { STORE_PHONE_NUMBER, PRODUCTS } from '../data/products';
 import { OrderDetails, TrackingTimelineEvent } from '../types';
+import { storeStateService } from '../services/storeStateService';
 
 interface OrderTrackingSectionProps {
   lastPlacedOrder?: OrderDetails | null;
@@ -241,6 +242,65 @@ export const OrderTrackingSection: React.FC<OrderTrackingSectionProps> = ({
             time: 'Expected Soon',
             completed: false,
             description: 'Inspect your bag before handing cash to rider.',
+          },
+        ],
+      });
+      return;
+    }
+
+    // Check if order exists in storeStateService database
+    const storedOrders = storeStateService.getOrders();
+    const storedOrder = storedOrders.find((o) => o.orderId.toUpperCase() === rawId);
+    if (storedOrder) {
+      setTrackedOrder({
+        orderId: storedOrder.orderId,
+        customerName: storedOrder.customerName,
+        city: storedOrder.city,
+        address: storedOrder.address,
+        phone: storedOrder.phone,
+        courier: storedOrder.courierName || 'Trax Logistics',
+        trackingNumber: storedOrder.trackingNumber || `TRX-${Math.floor(10000000 + Math.random() * 90000000)}-PK`,
+        items: storedOrder.items.map((i) => ({
+          name: i.product.name,
+          quantity: i.quantity,
+          price: i.product.price * i.quantity,
+        })),
+        total: storedOrder.total,
+        status: storedOrder.status || 'processing',
+        statusLabel: storedOrder.status === 'delivered' ? 'Delivered & Completed' : storedOrder.status === 'out_for_delivery' ? 'Out for Doorstep Delivery' : 'In Transit via Courier Express',
+        estimatedDelivery: ['Lahore', 'Karachi', 'Islamabad', 'Rawalpindi'].includes(storedOrder.city)
+          ? 'Within 24–48 Hours'
+          : '2–3 Business Days',
+        timeline: [
+          {
+            title: 'Order Confirmed via Cash on Delivery',
+            location: 'M&B Atelier Storefront',
+            time: storedOrder.createdAt ? new Date(storedOrder.createdAt).toLocaleDateString() : 'Confirmed',
+            completed: true,
+            description: `Order registered for ${storedOrder.city}. Open-Parcel inspection authorized.`,
+          },
+          {
+            title: 'Workshop Quality & Stitch Inspection',
+            location: 'Sialkot Atelier',
+            time: 'Quality Checked',
+            completed: true,
+            description: 'Inspecting zippers and seams before packing in tamper-evident sleeve.',
+          },
+          {
+            title: `Handover to ${storedOrder.courierName || 'Courier Partner'}`,
+            location: 'Linehaul Dispatch Center',
+            time: 'Dispatched',
+            completed: storedOrder.status !== 'processing',
+            current: storedOrder.status === 'processing',
+            description: 'Consignment moving through national logistics linehaul.',
+          },
+          {
+            title: 'Doorstep Open-Parcel Inspection & COD',
+            location: `${storedOrder.city}, Pakistan`,
+            time: 'Pending Delivery',
+            completed: storedOrder.status === 'delivered',
+            current: storedOrder.status === 'out_for_delivery',
+            description: 'Doorstep inspection allowed before paying Cash on Delivery.',
           },
         ],
       });
@@ -592,7 +652,7 @@ export const OrderTrackingSection: React.FC<OrderTrackingSectionProps> = ({
 
                 <div className="flex items-center gap-1 text-[11px] text-neutral-400">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Protected by 1-Year Local Sialkot Warranty</span>
+                  <span>Doorstep Open-Parcel Inspection Guaranteed on all COD orders</span>
                 </div>
               </div>
 

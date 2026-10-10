@@ -17,7 +17,8 @@ import { mbApiService, CustomerUser } from '../services/api';
 interface WhatsAppAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAuthenticated: (user: CustomerUser, token: string) => void;
+  onAuthenticated?: (user: CustomerUser, token: string) => void;
+  onSuccess?: (user: CustomerUser, token?: string) => void;
   initialPhone?: string;
 }
 
@@ -25,6 +26,7 @@ export const WhatsAppAuthModal: React.FC<WhatsAppAuthModalProps> = ({
   isOpen,
   onClose,
   onAuthenticated,
+  onSuccess,
   initialPhone = '',
 }) => {
   // Step 1: phone entry, Step 2: OTP entry
@@ -79,11 +81,11 @@ export const WhatsAppAuthModal: React.FC<WhatsAppAuthModalProps> = ({
 
     try {
       const res = await mbApiService.requestOtp(phoneInput);
-      setVerifiedUid(res.uid);
+      setVerifiedUid(res.formattedPhone);
       setStep('OTP');
       setResendTimer(60);
       setCanResend(false);
-      setDemoOtpHint(res.devOtp || '786920');
+      setDemoOtpHint('123456');
     } catch (err: unknown) {
       if (err instanceof Error) {
         setErrorMessage(err.message);
@@ -108,7 +110,9 @@ export const WhatsAppAuthModal: React.FC<WhatsAppAuthModalProps> = ({
     try {
       const res = await mbApiService.verifyOtp(verifiedUid || phoneInput, otpInput.trim());
       // Step 5: On successful verification, return user & token
-      onAuthenticated(res.user, res.token);
+      if (onAuthenticated) onAuthenticated(res.user, res.token);
+      if (onSuccess) onSuccess(res.user, res.token);
+      onClose();
     } catch (err: unknown) {
       if (err instanceof Error) {
         setErrorMessage(err.message);
@@ -128,7 +132,7 @@ export const WhatsAppAuthModal: React.FC<WhatsAppAuthModalProps> = ({
       const res = await mbApiService.requestOtp(verifiedUid || phoneInput);
       setResendTimer(60);
       setCanResend(false);
-      setDemoOtpHint(res.devOtp || '786920');
+      setDemoOtpHint('123456');
     } catch (err: unknown) {
       if (err instanceof Error) {
         setErrorMessage(err.message);

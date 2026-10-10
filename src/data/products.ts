@@ -15,8 +15,8 @@ export const ASSET_IMAGES = {
   brandLogo3d: brandLogo3dImg,
 };
 
-export const STORE_PHONE_NUMBER = '923008472910';
-export const STORE_DISPLAY_PHONE = '+92 300 8472910';
+export const STORE_PHONE_NUMBER = '923015466674';
+export const STORE_DISPLAY_PHONE = '0301 5466674';
 
 export const PAKISTAN_CITIES = [
   'Lahore',
@@ -36,6 +36,7 @@ export const PAKISTAN_CITIES = [
 export const PRODUCTS: Product[] = [
   {
     id: 'metro-commuter',
+    sku: 'MBA-MC-001',
     name: 'The Metro Commuter Backpack',
     subtitle: 'Engineered for Bike Commuters, Monsoon Downpours, & Heavy Tech',
     price: 6990,
@@ -66,9 +67,13 @@ export const PRODUCTS: Product[] = [
       'Luggage pass-through strap for effortless airport travel.',
     ],
     inStock: true,
+    stockQuantity: 42,
+    lowStockThreshold: 5,
+    unitManufacturingCost: 2650,
   },
   {
     id: 'tech-exec',
+    sku: 'MBA-TE-002',
     name: 'The Tech Exec Clamshell',
     subtitle: 'Architectural 180° Clamshell for C-Suite, Freelancers & Travel',
     price: 8990,
@@ -99,9 +104,13 @@ export const PRODUCTS: Product[] = [
       'Integrated cable pass-through port for fast charging on the go.',
     ],
     inStock: true,
+    stockQuantity: 18,
+    lowStockThreshold: 5,
+    unitManufacturingCost: 3100,
   },
   {
     id: 'urban-sling',
+    sku: 'MBA-US-003',
     name: 'The Urban Minimalist Sling',
     subtitle: 'Tactical Quick-Grab Crossbody for Everyday Carry & City Runs',
     price: 4990,
@@ -132,6 +141,9 @@ export const PRODUCTS: Product[] = [
       'Expandable bottom compression straps to carry an umbrella or light jacket.',
     ],
     inStock: true,
+    stockQuantity: 28,
+    lowStockThreshold: 5,
+    unitManufacturingCost: 1450,
   },
 ];
 
@@ -194,12 +206,12 @@ export const FAQS = [
   {
     question: 'Can I really inspect the bag before paying Cash on Delivery (COD)?',
     answer:
-      'Yes, 100%! We enforce our official "Open-Parcel Inspection Policy" with our courier partners (TCS, Trax & Leopards). When the rider reaches your doorstep, simply ask to open the flyer, inspect the zippers, fabric texture, and laptop padding. Pay the cash only when you are completely satisfied.',
+      'Yes, 100%! We enforce our official "Open-Parcel Inspection Policy" with our courier partners (Trax, CallCourier, PostEx & TCS). When the rider reaches your doorstep, simply ask to open the flyer, inspect the zippers, fabric texture, and laptop padding. Pay the cash only when you are completely satisfied.',
   },
   {
-    question: 'How does the 1-Year Local Warranty work in Pakistan?',
+    question: 'What quality standards and craftsmanship are used?',
     answer:
-      'Every M&B Atelier bag is manufactured in Sialkot with reinforced bartack stitching and heavy-duty zippers. If any stitch gives way or zipper malfunctions within 365 days of purchase, send a photo to our WhatsApp support. We will arrange free doorstep pickup, repair or replace it at our Sialkot atelier, and return it to you at zero cost.',
+      'Every M&B Atelier bag is handcrafted in Sialkot with military-grade box-bartack reinforcement and heavy-duty weather-sealed zippers. We use authentic 1000D Ballistic Oxford fabric engineered to withstand daily Pakistani road dust, motorbike vibration, and weather exposure.',
   },
   {
     question: 'How long does delivery take to my city?',

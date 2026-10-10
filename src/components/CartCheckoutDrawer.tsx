@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { CartItem, OrderDetails } from '../types';
 import { PAKISTAN_CITIES, STORE_PHONE_NUMBER } from '../data/products';
+import { storeStateService } from '../services/storeStateService';
 import {
   CustomerUser,
   CustomerOffer,
@@ -94,10 +95,13 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
 
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
 
-  // Discount calculations based on active and applied coupon
+  // Dynamic discount calculations based on applied coupon via storeStateService
   let discountAmount = 0;
-  if (appliedCoupon === 'RETURNING10') {
-    discountAmount = Math.round(subtotal * 0.1);
+  if (appliedCoupon) {
+    const promoValidation = storeStateService.validatePromoCode(appliedCoupon, subtotal);
+    if (promoValidation.valid) {
+      discountAmount = promoValidation.discountAmount;
+    }
   }
 
   const shipping = 0; // Free nationwide courier across Pakistan
@@ -108,19 +112,13 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
     const cleanCode = codeToApply.trim().toUpperCase();
     if (!cleanCode) return;
 
-    if (cleanCode === 'RETURNING10') {
-      const isEligible = activeOffers.some((o) => o.code === 'RETURNING10');
-      if (isEligible || currentUser?.uid === '923001234567') {
-        onApplyCoupon('RETURNING10');
-        setManualCouponInput('');
-      } else {
-        setCouponError('RETURNING10 is exclusive to patrons with at least 1 completed order.');
-      }
-    } else if (cleanCode === 'MBFREE') {
-      onApplyCoupon('MBFREE');
+    // Validate using dynamic StoreStateService
+    const result = storeStateService.validatePromoCode(cleanCode, subtotal);
+    if (result.valid) {
+      onApplyCoupon(cleanCode);
       setManualCouponInput('');
     } else {
-      setCouponError('Invalid or expired coupon code for Pakistan COD delivery.');
+      setCouponError(result.message);
     }
   };
 
@@ -169,10 +167,10 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
         deliveryNotes: deliveryNotes.trim(),
         items: cart,
         subtotal,
-        discountAmount,
-        couponCode: appliedCoupon || undefined,
+        shipping,
         total,
-        openParcelRequested: requestOpenParcel,
+        appliedCoupon: appliedCoupon || undefined,
+        requestOpenParcel,
       });
 
       if (response.success) {
@@ -185,13 +183,17 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
           deliveryNotes: deliveryNotes.trim(),
           items: cart,
           subtotal,
+          discountAmount,
+          appliedCoupon: appliedCoupon || undefined,
           shipping: 0,
           total,
           createdAt: new Date().toISOString(),
           paymentMethod: 'COD',
           status: 'processing',
-          courier: 'Trax Logistics',
+          courierId: 'trax',
+          courierName: 'Trax Logistics',
           trackingNumber: response.order.courierTrackingNumber,
+          requestOpenParcel,
         };
 
         onOrderSuccess(orderData);
@@ -609,9 +611,9 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
 
                   {/* Trust Footer Note */}
                   <div className="bg-[#1C2025] rounded-xl p-3 border border-[#2B3038] flex items-start gap-2.5 text-[11px] text-neutral-300">
-                    <ShieldCheck className="w-4 h-4 text-[#E2B29F] shrink-0 mt-0.5" />
+                    <ShieldCheck className="w-4 h-4 text-[#C5832B] shrink-0 mt-0.5" />
                     <span>
-                      <strong>1-Year Local Warranty Included:</strong> Manufactured in Sialkot with full doorstep pickup coverage for 365 days.
+                      <strong>Open-Parcel Doorstep Inspection:</strong> Handcrafted in Sialkot with heavy 1000D Oxford and weather-sealed zips. Inspect before paying Cash on Delivery.
                     </span>
                   </div>
                 </form>

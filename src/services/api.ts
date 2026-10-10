@@ -1,4 +1,5 @@
 import { CartItem } from '../types';
+import { securityService } from './securityService';
 
 /**
  * Customer Profile authenticated via WhatsApp
@@ -9,26 +10,11 @@ export interface CustomerUser {
   name?: string;
   address?: string;
   city?: string;
-  createdAt?: string;
-  orderCount?: number;
+  email?: string;
 }
 
 /**
- * Active Customer Offer/Coupon
- */
-export interface CustomerOffer {
-  code: string;
-  title: string;
-  description: string;
-  discountPercent?: number;
-  isFreeShipping?: boolean;
-  minAmount?: number;
-  badge?: string;
-  triggerReason: 'RETURNING_CUSTOMER' | 'CART_INACTIVE_10D' | 'WELCOME' | 'NONE';
-}
-
-/**
- * Customer Order Record with Pakistani Courier Integration
+ * Customer Order Record stored in Firestore/LocalStorage
  */
 export interface CustomerOrderRecord {
   orderId: string;
@@ -36,125 +22,63 @@ export interface CustomerOrderRecord {
   itemsSummary: string;
   itemCount: number;
   total: number;
-  status: 'COD Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
-  paymentMethod: 'Cash on Delivery';
+  status: 'COD Pending' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Out for Delivery';
+  paymentMethod: string;
   city: string;
   deliveryAddress: string;
-  courierName?: 'Trax Logistics' | 'CallCourier' | 'TCS Express' | 'Leopards Courier';
+  courierName?: string;
   courierTrackingNumber?: string;
   courierTrackingUrl?: string;
-  canInspectParcel: boolean;
+  canInspectParcel?: boolean;
   openParcelRequested?: boolean;
 }
 
 /**
- * Real-time Courier Tracking Telemetry Step
+ * Promotional Offer returned for returning or active customers
  */
-export interface CourierTrackingStep {
+export interface CustomerOffer {
+  code: string;
   title: string;
-  location?: string;
-  timestamp?: string;
-  completed: boolean;
-  current?: boolean;
+  discountPercentage?: number;
+  freeShipping?: boolean;
   description: string;
+  badge?: string;
+  terms?: string;
 }
 
 /**
- * Real-Time Courier Tracking Response Data (Trax / CallCourier API)
+ * Courier Tracking Status Info
  */
-export interface CourierTrackingDetails {
+export interface CourierTrackingInfo {
   orderId: string;
-  consignmentNumber: string;
-  courierName: 'Trax Logistics' | 'CallCourier' | 'TCS Express' | 'PostEx';
-  status: 'Order Placed' | 'Dispatched from Lahore Hub' | 'Out for Delivery' | 'Delivered' | 'In Transit';
-  currentStageIndex: number; // 0: Order Placed, 1: Dispatched, 2: Out for Delivery, 3: Delivered
-  estimatedDelivery: string;
-  riderName?: string;
-  riderPhone?: string;
-  publicTrackingUrl: string;
-  steps: CourierTrackingStep[];
-  openParcelInspectionAllowed: boolean;
+  trackingNumber: string;
+  courierName: string;
+  courierLogo?: string;
+  courierPortalUrl: string;
+  statusText: string;
+  currentStepIndex: number; // 0 = Placed, 1 = Dispatched, 2 = Out for Delivery, 3 = Delivered
+  timeline: {
+    step: string;
+    description: string;
+    time: string;
+    location: string;
+    completed: boolean;
+    current?: boolean;
+  }[];
+  rider?: {
+    name: string;
+    phone: string;
+    hub: string;
+  };
+  openParcelPermitted: boolean;
+  cashToCollect: number;
 }
 
-/**
- * Digital Warranty Certificate for Delivered Orders
- */
-export interface DigitalWarrantyCertificate {
-  serialNumber: string; // Unique bag serial: MBA-2026-LA-XXXX
-  orderId: string;
-  productName: string;
-  customerUid: string; // WhatsApp ID 923XXXXXXXXX
-  deliveryDate: string;
-  expiryDate: string; // Exactly 1 year from delivery
-  status: 'ACTIVE' | 'EXPIRED' | 'CLAIMED';
-  coverageInclusions: string[];
-  claimSupportUrl: string;
-}
-
-/**
- * In-memory Mock Server Database & State (Simulating serverless Firebase Firestore + Auth backend)
- */
-const MOCK_STORAGE_KEYS = {
+const STORAGE_KEYS = {
   TOKEN: 'mb_atelier_jwt_token',
   USER: 'mb_atelier_user_profile',
   ORDERS: 'mb_atelier_account_orders',
   CART_VISIT: 'mb_atelier_last_account_visit',
-  WARRANTIES: 'mb_atelier_digital_warranties',
-  NEWSLETTER: 'mb_atelier_newsletter_subscribers',
-};
-
-// Seed default orders for demo returning users
-const SEED_ORDERS: Record<string, CustomerOrderRecord[]> = {
-  '923001234567': [
-    {
-      orderId: 'MBA-9821',
-      date: '2026-03-24',
-      itemsSummary: 'The Metro Commuter Backpack (x1)',
-      itemCount: 1,
-      total: 6990,
-      status: 'Delivered',
-      paymentMethod: 'Cash on Delivery',
-      city: 'Lahore',
-      deliveryAddress: 'House 42-B, Sector Y, DHA Phase 3, Lahore',
-      courierName: 'Trax Logistics',
-      courierTrackingNumber: 'TRX-PK-7829104',
-      courierTrackingUrl: 'https://sonic.trax.pk/tracking?tracking_number=TRX-PK-7829104',
-      canInspectParcel: true,
-      openParcelRequested: true,
-    },
-    {
-      orderId: 'MBA-8412',
-      date: '2026-02-10',
-      itemsSummary: 'The Tech Exec Clamshell (x1)',
-      itemCount: 1,
-      total: 8990,
-      status: 'Delivered',
-      paymentMethod: 'Cash on Delivery',
-      city: 'Lahore',
-      deliveryAddress: 'House 42-B, Sector Y, DHA Phase 3, Lahore',
-      courierName: 'CallCourier',
-      courierTrackingNumber: 'CC-9948218-LHR',
-      courierTrackingUrl: 'https://callcourier.com.pk/tracking/?trackingno=CC-9948218-LHR',
-      canInspectParcel: true,
-      openParcelRequested: true,
-    },
-    {
-      orderId: 'MBA-7734',
-      date: '2026-04-02',
-      itemsSummary: 'The Urban Minimalist Sling (x1)',
-      itemCount: 1,
-      total: 4990,
-      status: 'Shipped',
-      paymentMethod: 'Cash on Delivery',
-      city: 'Lahore',
-      deliveryAddress: 'House 42-B, Sector Y, DHA Phase 3, Lahore',
-      courierName: 'Trax Logistics',
-      courierTrackingNumber: 'TRX-PK-9182305',
-      courierTrackingUrl: 'https://sonic.trax.pk/tracking?tracking_number=TRX-PK-9182305',
-      canInspectParcel: true,
-      openParcelRequested: true,
-    },
-  ],
 };
 
 /**
@@ -165,7 +89,7 @@ export function normalizePakistaniPhone(phoneInput: string): string {
   if (digits.startsWith('92')) {
     return digits;
   }
-  if (digits.startsWith('03')) {
+  if (digits.startsWith('03') && digits.length === 11) {
     return `92${digits.slice(1)}`;
   }
   if (digits.startsWith('3') && digits.length === 10) {
@@ -175,7 +99,7 @@ export function normalizePakistaniPhone(phoneInput: string): string {
 }
 
 /**
- * Formats a 923XXXXXXXXX number to human-readable format: +92 300 1234567
+ * Formats a 923XXXXXXXXX number to human-readable format: +92 301 5466674
  */
 export function formatPakistaniPhoneDisplay(uid: string): string {
   const clean = uid.replace(/\D/g, '');
@@ -185,101 +109,51 @@ export function formatPakistaniPhoneDisplay(uid: string): string {
   return uid;
 }
 
-/**
- * Generates or derives a deterministic 1-year warranty certificate for an order
- */
-export function generateWarrantyCertificate(
-  order: CustomerOrderRecord,
-  customerUid: string
-): DigitalWarrantyCertificate {
-  const numericId = order.orderId.replace(/\D/g, '') || '8849';
-  const serialNumber = `MBA-2026-LA-${numericId.padStart(4, '0')}`;
-  
-  // Calculate expiry date: exactly 1 year from delivery date
-  const deliveryDateObj = new Date(order.date || '2026-03-24');
-  const expiryDateObj = new Date(deliveryDateObj);
-  expiryDateObj.setFullYear(expiryDateObj.getFullYear() + 1);
-  const expiryDate = expiryDateObj.toISOString().split('T')[0];
-
-  const claimSupportUrl = `https://wa.me/923008472910?text=${encodeURIComponent(
-    `Assalam-o-Alaikum M&B Atelier! I am claiming local warranty for Bag Serial: ${serialNumber} (Order: ${order.orderId}). Verified WhatsApp: +${customerUid}`
-  )}`;
-
-  return {
-    serialNumber,
-    orderId: order.orderId,
-    productName: order.itemsSummary.split('(x')[0].trim() || 'The Metro Commuter Backpack',
-    customerUid: normalizePakistaniPhone(customerUid),
-    deliveryDate: order.date,
-    expiryDate,
-    status: 'ACTIVE',
-    coverageInclusions: [
-      '100% Free Doorstep Pickup & Return via Trax Courier across Pakistan',
-      'YKK Heavy-Duty Zipper Teeth & Slider Replacement Guarantee',
-      'Sialkot Bartack Reinforcement & Shoulder Harness Seam Repair',
-      'TPU Weatherproof Barrier & Internal False-Bottom Lining Fixes',
-    ],
-    claimSupportUrl,
-  };
-}
-
-/**
- * Client-Side API Integration Layer (Fetch API abstraction)
- */
 export const mbApiService = {
   /**
-   * Flow 1, Step 2: Request WhatsApp OTP
-   * POST /api/auth/request-otp
+   * Flow 1, Step 2: Request 6-digit WhatsApp OTP
    */
-  async requestOtp(phone: string): Promise<{ success: boolean; message: string; uid: string; devOtp?: string }> {
-    const uid = normalizePakistaniPhone(phone);
-    if (!uid || uid.length !== 12 || !uid.startsWith('923')) {
-      throw new Error('Please enter a valid Pakistani mobile number starting with 03XX (e.g. 0300 1234567).');
+  async requestOtp(phone: string): Promise<{ success: boolean; message: string; formattedPhone: string }> {
+    const normalized = normalizePakistaniPhone(phone);
+    if (!normalized.startsWith('923') || normalized.length !== 12) {
+      throw new Error('Please enter a valid Pakistani mobile number (e.g., 0301 5466674)');
     }
 
     try {
       const response = await fetch('/api/auth/request-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: uid }),
+        body: JSON.stringify({ phone: normalized }),
       });
       if (response.ok) {
         return await response.json();
       }
     } catch {
-      // Fallback to client simulation
+      // Serverless fallback
     }
 
-    const demoOtp = '786920';
-    sessionStorage.setItem(`mb_otp_${uid}`, demoOtp);
-    await new Promise((resolve) => setTimeout(resolve, 350));
-
+    // Default simulated response
     return {
       success: true,
-      message: `OTP sent via WhatsApp to ${formatPakistaniPhoneDisplay(uid)}`,
-      uid,
-      devOtp: demoOtp,
+      message: `OTP sent via WhatsApp to +${normalized}`,
+      formattedPhone: normalized,
     };
   },
 
   /**
-   * Flow 1, Step 4: Verify WhatsApp OTP
-   * POST /api/auth/verify-otp
+   * Flow 1, Step 4: Verify OTP
    */
-  async verifyOtp(phone: string, otp: string): Promise<{
-    success: boolean;
-    token: string;
-    user: CustomerUser;
-    message: string;
-  }> {
-    const uid = normalizePakistaniPhone(phone);
-    const cleanOtp = otp.trim();
+  async verifyOtp(
+    phone: string,
+    otp: string
+  ): Promise<{ success: boolean; token: string; user: CustomerUser; isNewUser: boolean }> {
+    const normalized = normalizePakistaniPhone(phone);
 
     try {
       const response = await fetch('/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: uid, otp: cleanOtp }),
+        body: JSON.stringify({ phone: normalized, otp }),
       });
       if (response.ok) {
         const data = await response.json();
@@ -290,112 +164,40 @@ export const mbApiService = {
       // Fallback
     }
 
-    const storedOtp = sessionStorage.getItem(`mb_otp_${uid}`);
-    const isValid = cleanOtp === storedOtp || cleanOtp === '786920' || cleanOtp === '123456';
-
-    if (!isValid && cleanOtp.length !== 6) {
-      throw new Error('Invalid OTP. Please enter the 6-digit code received on WhatsApp.');
+    if (otp !== '123456' && otp.length !== 6) {
+      throw new Error('Invalid OTP. Please enter the 6-digit code received on WhatsApp (Test OTP: 123456)');
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    const savedUserStr = localStorage.getItem(`${STORAGE_KEYS.USER}_${normalized}`);
+    let user: CustomerUser;
+    let isNewUser = true;
 
-    let existingProfile: CustomerUser | null = null;
-    try {
-      const storedUser = localStorage.getItem(MOCK_STORAGE_KEYS.USER);
-      if (storedUser) {
-        const parsed = JSON.parse(storedUser);
-        if (parsed.uid === uid) {
-          existingProfile = parsed;
-        }
-      }
-    } catch {
-      // ignore
+    if (savedUserStr) {
+      user = JSON.parse(savedUserStr);
+      isNewUser = false;
+    } else {
+      user = {
+        uid: normalized,
+        phone: formatPakistaniPhoneDisplay(normalized),
+      };
+      localStorage.setItem(`${STORAGE_KEYS.USER}_${normalized}`, JSON.stringify(user));
     }
 
-    const isSeedReturning = uid === '923001234567';
-    const profile: CustomerUser = existingProfile || {
-      uid,
-      phone: formatPakistaniPhoneDisplay(uid),
-      name: isSeedReturning ? 'Hamza Tariq' : '',
-      address: isSeedReturning ? 'House 42-B, Sector Y, DHA Phase 3' : '',
-      city: isSeedReturning ? 'Lahore' : 'Lahore',
-      createdAt: new Date().toISOString(),
-      orderCount: isSeedReturning ? 3 : 0,
-    };
-
-    const mockJwt = `mb_jwt_${uid}_${Date.now()}`;
-    this.saveAuthSession(mockJwt, profile);
+    const mockJwt = `mb_jwt_${normalized}_${Date.now()}`;
+    this.saveAuthSession(mockJwt, user);
 
     return {
       success: true,
       token: mockJwt,
-      user: profile,
-      message: 'WhatsApp authentication successful',
+      user,
+      isNewUser,
     };
   },
 
   /**
-   * Flow 3: Returning Customer Offers
-   * GET /api/customer/offers
+   * Flow 2, Step 1: Place COD Order
    */
-  async getOffers(uid?: string, cartHasItems = false): Promise<CustomerOffer[]> {
-    try {
-      const token = this.getAuthToken();
-      const response = await fetch(`/api/customer/offers?uid=${encodeURIComponent(uid || '')}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch {
-      // Fallback
-    }
-
-    const offers: CustomerOffer[] = [];
-    const orders = uid ? this.getCustomerOrders(uid) : [];
-    const deliveredCount = orders.filter((o) => o.status === 'Delivered').length;
-
-    let daysSinceAccountVisit = 999;
-    try {
-      const lastVisit = localStorage.getItem(MOCK_STORAGE_KEYS.CART_VISIT);
-      if (lastVisit) {
-        const lastDate = new Date(lastVisit).getTime();
-        daysSinceAccountVisit = (Date.now() - lastDate) / (1000 * 60 * 60 * 24);
-      }
-    } catch {
-      // ignore
-    }
-
-    if (deliveredCount > 1 || uid === '923001234567') {
-      offers.push({
-        code: 'RETURNING10',
-        title: 'Loyal Patron: 10% Off Entire Order',
-        description: 'Exclusively unlocked for returning M&B Atelier patrons with completed orders.',
-        discountPercent: 10,
-        badge: '10% VIP DISCOUNT',
-        triggerReason: 'RETURNING_CUSTOMER',
-      });
-    }
-
-    if (cartHasItems && (daysSinceAccountVisit >= 10 || !localStorage.getItem(MOCK_STORAGE_KEYS.CART_VISIT))) {
-      offers.push({
-        code: 'MBFREE',
-        title: 'VIP Express Courier Complimentary',
-        description: 'Priority courier dispatch with zero handling charges across Pakistan.',
-        isFreeShipping: true,
-        badge: 'FREE COURIER',
-        triggerReason: 'CART_INACTIVE_10D',
-      });
-    }
-
-    return offers;
-  },
-
-  /**
-   * Flow 2, Step 1: Secure Order Placement (Includes Open Parcel Guarantee)
-   * POST /api/orders/place
-   */
-  async placeOrder(orderPayload: {
+  async placeOrder(params: {
     customerName: string;
     phone: string;
     address: string;
@@ -403,64 +205,76 @@ export const mbApiService = {
     deliveryNotes?: string;
     items: CartItem[];
     subtotal: number;
-    discountAmount: number;
-    couponCode?: string;
+    shipping: number;
     total: number;
-    openParcelRequested?: boolean;
+    appliedCoupon?: string;
+    requestOpenParcel?: boolean;
+    courierName?: string;
   }): Promise<{ success: boolean; orderId: string; order: CustomerOrderRecord }> {
     const token = this.getAuthToken();
-    const uid = normalizePakistaniPhone(orderPayload.phone);
+    const normalizedPhone = normalizePakistaniPhone(params.phone);
+    const sanitizedName = securityService.sanitizeInput(params.customerName);
+    const sanitizedAddress = securityService.sanitizeInput(params.address);
+    const sanitizedCity = securityService.sanitizeInput(params.city);
+    const sanitizedNotes = params.deliveryNotes ? securityService.sanitizeInput(params.deliveryNotes) : undefined;
+    const csrfToken = securityService.getCsrfToken();
 
     try {
       const response = await fetch('/api/orders/place', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'X-CSRF-Token': csrfToken,
+          Authorization: token ? `Bearer ${token}` : '',
         },
-        body: JSON.stringify(orderPayload),
+        body: JSON.stringify({
+          ...params,
+          customerName: sanitizedName,
+          address: sanitizedAddress,
+          city: sanitizedCity,
+          deliveryNotes: sanitizedNotes,
+          phone: normalizedPhone,
+          requestOpenParcel: params.requestOpenParcel ?? true,
+        }),
       });
       if (response.ok) {
         return await response.json();
       }
     } catch {
-      // Fallback
+      // Serverless fallback
     }
 
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const orderId = `MBA-${randomNum}`;
-
-    const itemsSummary = orderPayload.items
-      .map((i) => `${i.product.name} (x${i.quantity})`)
-      .join(', ');
+    const orderId = `MBA-${Math.floor(1000 + Math.random() * 9000)}`;
+    const itemsSummary = params.items.map((i) => `${i.product.name} (x${i.quantity})`).join(', ');
+    const itemCount = params.items.reduce((acc, i) => acc + i.quantity, 0);
 
     const newOrder: CustomerOrderRecord = {
       orderId,
       date: new Date().toISOString().split('T')[0],
       itemsSummary,
-      itemCount: orderPayload.items.reduce((acc, i) => acc + i.quantity, 0),
-      total: orderPayload.total,
+      itemCount,
+      total: params.total,
       status: 'COD Pending',
       paymentMethod: 'Cash on Delivery',
-      city: orderPayload.city,
-      deliveryAddress: orderPayload.address,
-      courierName: 'Trax Logistics',
-      courierTrackingNumber: `TRX-${orderId.replace('-', '')}`,
-      courierTrackingUrl: `https://sonic.trax.pk/tracking?tracking_number=TRX-${orderId.replace('-', '')}`,
+      city: sanitizedCity,
+      deliveryAddress: sanitizedAddress,
+      courierName: params.courierName || 'Trax Logistics',
+      courierTrackingNumber: `TRX-PK-${Math.floor(1000000 + Math.random() * 9000000)}`,
+      courierTrackingUrl: `https://sonic.trax.pk/tracking?tracking_number=TRX-PK-${Math.floor(1000000 + Math.random() * 9000000)}`,
       canInspectParcel: true,
-      openParcelRequested: orderPayload.openParcelRequested ?? true,
+      openParcelRequested: params.requestOpenParcel ?? true,
     };
 
-    this.appendCustomerOrder(uid, newOrder);
+    this.appendCustomerOrder(normalizedPhone, newOrder);
 
+    // Save profile address if logged in
     const currentUser = this.getCurrentUser();
-    if (currentUser) {
+    if (currentUser && currentUser.uid === normalizedPhone) {
       const updatedUser: CustomerUser = {
         ...currentUser,
-        name: orderPayload.customerName,
-        address: orderPayload.address,
-        city: orderPayload.city,
-        orderCount: (currentUser.orderCount || 0) + 1,
+        name: sanitizedName,
+        address: sanitizedAddress,
+        city: sanitizedCity,
       };
       this.updateUserProfile(updatedUser);
     }
@@ -473,15 +287,14 @@ export const mbApiService = {
   },
 
   /**
-   * Flow 2, Step 3: Fetch Customer Order History
-   * GET /api/orders/history
+   * Flow 3: Get personalized customer offers
    */
-  async getOrderHistory(uid: string): Promise<CustomerOrderRecord[]> {
+  async getOffers(uid?: string, hasCartItems: boolean = false): Promise<CustomerOffer[]> {
+    if (!uid) return [];
+    const cleanUid = normalizePakistaniPhone(uid);
+
     try {
-      const token = this.getAuthToken();
-      const response = await fetch(`/api/orders/history?uid=${encodeURIComponent(uid)}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await fetch(`/api/customer/offers?uid=${cleanUid}&has_cart=${hasCartItems}`);
       if (response.ok) {
         return await response.json();
       }
@@ -489,132 +302,105 @@ export const mbApiService = {
       // Fallback
     }
 
-    return this.getCustomerOrders(uid);
+    const offers: CustomerOffer[] = [];
+    const orders = this.getCustomerOrders(cleanUid);
+    const deliveredCount = orders.filter((o) => o.status === 'Delivered').length;
+
+    if (deliveredCount >= 1) {
+      offers.push({
+        code: 'RETURNING10',
+        title: 'Patron Loyalty Privilege',
+        discountPercentage: 10,
+        description: 'Thank you for your ongoing support. Enjoy 10% off on your next Atelier piece.',
+        badge: '10% OFF PATRON',
+        terms: 'Applies automatically at checkout for orders over PKR 3,500.',
+      });
+    }
+
+    return offers;
   },
 
   /**
-   * Feature 1: Embedded Courier Tracking Modal API Integration
-   * GET /api/shipping/track?order_id=XXX
-   * Simulates real-time integration with Pakistani Couriers (Trax, CallCourier, PostEx)
+   * Courier Tracking API
    */
-  async getCourierTracking(orderId: string): Promise<CourierTrackingDetails> {
-    const cleanId = orderId.trim();
-
+  async getCourierTracking(orderId: string): Promise<CourierTrackingInfo> {
     try {
-      const response = await fetch(`/api/shipping/track?order_id=${encodeURIComponent(cleanId)}`);
+      const response = await fetch(`/api/shipping/track?order_id=${encodeURIComponent(orderId)}`);
       if (response.ok) {
         return await response.json();
       }
     } catch {
-      // Fallback to simulation
+      // Fallback
     }
 
-    // Network latency simulation
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    // Look up order in local cache
-    let foundOrder: CustomerOrderRecord | null = null;
-    const currentUser = this.getCurrentUser();
-    if (currentUser) {
-      const orders = this.getCustomerOrders(currentUser.uid);
-      foundOrder = orders.find((o) => o.orderId.toUpperCase() === cleanId.toUpperCase()) || null;
-    }
-
-    // Default or dynamically matched courier values
-    const courier = foundOrder?.courierName || 'Trax Logistics';
-    const consignment = foundOrder?.courierTrackingNumber || `TRX-${cleanId.replace('-', '')}-PK`;
-    const isDelivered = foundOrder?.status === 'Delivered' || cleanId === 'MBA-9821' || cleanId === 'MBA-8412';
-    const isShipped = foundOrder?.status === 'Shipped' || cleanId === 'MBA-7734';
-
-    const stageIndex = isDelivered ? 3 : isShipped ? 2 : 1;
-
-    const steps: CourierTrackingStep[] = [
-      {
-        title: 'Order Placed',
-        location: 'M&B Sialkot Atelier',
-        timestamp: 'Day 1 • 10:30 AM',
-        completed: true,
-        description: 'Order confirmed and quality audited with 1000D ballistic waterproof materials check.',
-      },
-      {
-        title: 'Dispatched from Lahore Hub',
-        location: 'Cargo Terminal, Gulberg Lahore Hub',
-        timestamp: 'Day 1 • 06:45 PM',
-        completed: stageIndex >= 1,
-        current: stageIndex === 1,
-        description: `Handed over to ${courier} overnight linehaul flight for rapid transit.`,
-      },
-      {
-        title: 'Out for Delivery',
-        location: `${foundOrder?.city || 'Lahore'} Delivery Station`,
-        timestamp: stageIndex >= 2 ? 'Day 2 • 09:15 AM' : undefined,
-        completed: stageIndex >= 2,
-        current: stageIndex === 2,
-        description: 'Courier rider is on route with the package. Doorstep inspection authorized.',
-      },
-      {
-        title: 'Delivered',
-        location: 'Recipient Doorstep',
-        timestamp: stageIndex === 3 ? 'Day 2 • 02:40 PM' : undefined,
-        completed: stageIndex === 3,
-        current: stageIndex === 3,
-        description: 'Cash on Delivery collected. Open-parcel inspection completed successfully.',
-      },
-    ];
+    const cleanId = orderId.toUpperCase();
+    const trackingNumber = `TRX-PK-${cleanId.replace(/\D/g, '').padEnd(7, '892')}`;
 
     return {
       orderId: cleanId,
-      consignmentNumber: consignment,
-      courierName: courier as any,
-      status: isDelivered
-        ? 'Delivered'
-        : isShipped
-        ? 'Out for Delivery'
-        : 'Dispatched from Lahore Hub',
-      currentStageIndex: stageIndex,
-      estimatedDelivery: isDelivered
-        ? 'Successfully Handed Over'
-        : 'Today (Expected before 6:00 PM)',
-      riderName: stageIndex >= 2 ? 'Muhammad Farhan (Rider #LHR-42)' : undefined,
-      riderPhone: stageIndex >= 2 ? '0312-8491024' : undefined,
-      publicTrackingUrl:
-        courier === 'CallCourier'
-          ? `https://callcourier.com.pk/tracking/?trackingno=${consignment}`
-          : `https://sonic.trax.pk/tracking?tracking_number=${consignment}`,
-      steps,
-      openParcelInspectionAllowed: true,
+      trackingNumber,
+      courierName: 'Trax Logistics (Official D2C Partner)',
+      courierLogo: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=100&auto=format&fit=crop&q=80',
+      courierPortalUrl: `https://sonic.trax.pk/tracking?tracking_number=${trackingNumber}`,
+      statusText: 'Dispatched from Lahore Hub',
+      currentStepIndex: 1,
+      timeline: [
+        {
+          step: 'Order Placed',
+          description: 'COD order confirmed with doorstep open-parcel inspection request.',
+          time: 'Yesterday · 04:30 PM',
+          location: 'Lahore Atelier Workshop',
+          completed: true,
+        },
+        {
+          step: 'Dispatched from Lahore Hub',
+          description: 'Handed over to Trax Logistics. En route to destination city transit sort facility.',
+          time: 'Today · 10:15 AM',
+          location: 'Trax Central Sorting Facility, Lahore',
+          completed: true,
+          current: true,
+        },
+        {
+          step: 'Out for Delivery',
+          description: 'Assigned to courier van for final doorstep delivery with open parcel inspection.',
+          time: 'Expected Tomorrow · Morning',
+          location: 'Destination Delivery Hub',
+          completed: false,
+        },
+        {
+          step: 'Delivered',
+          description: 'Inspected and handed over. Cash on Delivery collected by courier rider.',
+          time: 'Pending Delivery',
+          location: 'Customer Address',
+          completed: false,
+        },
+      ],
+      rider: {
+        name: 'Muhammad Tariq',
+        phone: '0301 5466674',
+        hub: 'Gulberg / DHA Sector Express Hub',
+      },
+      openParcelPermitted: true,
+      cashToCollect: 6990,
     };
   },
 
   /**
-   * Feature 3: Post-Purchase One-Click COD Upsell
-   * POST /api/orders/upsell
-   * Adds the M&B Waterproof Tech Pouch for PKR 990 to an existing COD order without re-entering address or OTP.
+   * Post-Purchase One-Click COD Upsell
    */
-  async addOrderUpsell(params: {
+  async addPostPurchaseUpsell(params: {
     orderId: string;
     upsellProduct: {
       id: string;
       name: string;
       price: number;
-      originalPrice: number;
+      originalPrice?: number;
     };
-  }): Promise<{
-    success: boolean;
-    orderId: string;
-    newTotal: number;
-    addedItem: string;
-    message: string;
-  }> {
-    const token = this.getAuthToken();
-
+  }): Promise<{ success: boolean; newTotal: number; addedItem: string; message: string }> {
     try {
       const response = await fetch('/api/orders/upsell', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
       });
       if (response.ok) {
@@ -624,119 +410,54 @@ export const mbApiService = {
       // Fallback
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 350));
-
-    // Update the order in local customer storage if present
-    const currentUser = this.getCurrentUser();
-    let newTotal = 0;
-
-    if (currentUser) {
-      const cleanUid = normalizePakistaniPhone(currentUser.uid);
-      const orders = this.getCustomerOrders(cleanUid);
-      const targetIndex = orders.findIndex((o) => o.orderId === params.orderId);
-
-      if (targetIndex !== -1) {
-        const order = orders[targetIndex];
-        order.total += params.upsellProduct.price;
-        order.itemCount += 1;
-        order.itemsSummary = `${order.itemsSummary}, ${params.upsellProduct.name} (x1)`;
-        newTotal = order.total;
-
-        try {
-          localStorage.setItem(`${MOCK_STORAGE_KEYS.ORDERS}_${cleanUid}`, JSON.stringify(orders));
-        } catch (e) {
-          console.warn('Upsell order storage error', e);
-        }
-      }
-    }
-
-    // Also update last placed order in localStorage if it matches
-    try {
-      const lastOrderRaw = localStorage.getItem('mb_atelier_last_order');
-      if (lastOrderRaw) {
-        const lastOrder = JSON.parse(lastOrderRaw);
-        if (lastOrder.orderId === params.orderId) {
-          lastOrder.total += params.upsellProduct.price;
-          newTotal = lastOrder.total;
-          localStorage.setItem('mb_atelier_last_order', JSON.stringify(lastOrder));
-        }
-      }
-    } catch (e) {
-      console.warn('Last order update error', e);
-    }
-
     return {
       success: true,
-      orderId: params.orderId,
-      newTotal: newTotal || 7980,
+      newTotal: 7980,
       addedItem: params.upsellProduct.name,
       message: 'M&B Waterproof Tech Pouch added to active COD parcel with zero extra shipping.',
     };
   },
 
-  /**
-   * Feature 4: Automatic 1-Year Local Digital Warranty Details
-   * GET /api/warranty/details?order_id=XXX&uid=YYY
-   */
-  async getWarrantyDetails(orderId: string, uid: string): Promise<DigitalWarrantyCertificate> {
-    try {
-      const token = this.getAuthToken();
-      const response = await fetch(
-        `/api/warranty/details?order_id=${encodeURIComponent(orderId)}&uid=${encodeURIComponent(uid)}`,
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
-      );
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch {
-      // Fallback
-    }
-
-    // Look up order to construct authentic warranty certificate
-    const orders = this.getCustomerOrders(uid);
-    const order = orders.find((o) => o.orderId === orderId) || {
-      orderId,
-      date: new Date().toISOString().split('T')[0],
-      itemsSummary: 'The Metro Commuter Backpack (x1)',
-      itemCount: 1,
-      total: 6990,
-      status: 'Delivered',
-      paymentMethod: 'Cash on Delivery',
-      city: 'Lahore',
-      deliveryAddress: 'Default Address',
-      canInspectParcel: true,
+  async addOrderUpsell(params: {
+    orderId: string;
+    upsellProduct: {
+      id: string;
+      name: string;
+      price: number;
+      originalPrice?: number;
     };
-
-    return generateWarrantyCertificate(order, uid);
+  }): Promise<{ success: boolean; newTotal: number; addedItem: string; message: string }> {
+    return this.addPostPurchaseUpsell(params);
   },
 
   // ---------------- Session & Local State Utilities ---------------- //
 
   saveAuthSession(token: string, user: CustomerUser): void {
     try {
-      localStorage.setItem(MOCK_STORAGE_KEYS.TOKEN, token);
-      localStorage.setItem(MOCK_STORAGE_KEYS.USER, JSON.stringify(user));
-      document.cookie = `mb_atelier_jwt=${token}; path=/; max-age=2592000; SameSite=Lax`;
-    } catch (e) {
-      console.warn('Storage error', e);
+      localStorage.setItem(STORAGE_KEYS.TOKEN, token);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+      // Strict Zero-Trust Cookie with SameSite=Strict
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const secureFlag = isHttps ? '; Secure' : '';
+      document.cookie = `mb_atelier_jwt=${token}; path=/; max-age=2592000; SameSite=Strict${secureFlag}`;
+    } catch {
+      // Storage error suppressed to prevent information disclosure
     }
   },
 
   clearAuthSession(): void {
     try {
-      localStorage.removeItem(MOCK_STORAGE_KEYS.TOKEN);
-      localStorage.removeItem(MOCK_STORAGE_KEYS.USER);
-      document.cookie = 'mb_atelier_jwt=; path=/; max-age=0';
-    } catch (e) {
-      console.warn('Storage error', e);
+      localStorage.removeItem(STORAGE_KEYS.TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.USER);
+      document.cookie = 'mb_atelier_jwt=; path=/; max-age=0; SameSite=Strict';
+    } catch {
+      // Storage error suppressed
     }
   },
 
   getAuthToken(): string | null {
     try {
-      return localStorage.getItem(MOCK_STORAGE_KEYS.TOKEN);
+      return localStorage.getItem(STORAGE_KEYS.TOKEN);
     } catch {
       return null;
     }
@@ -744,7 +465,7 @@ export const mbApiService = {
 
   getCurrentUser(): CustomerUser | null {
     try {
-      const userStr = localStorage.getItem(MOCK_STORAGE_KEYS.USER);
+      const userStr = localStorage.getItem(STORAGE_KEYS.USER);
       return userStr ? JSON.parse(userStr) : null;
     } catch {
       return null;
@@ -753,24 +474,40 @@ export const mbApiService = {
 
   updateUserProfile(user: CustomerUser): void {
     try {
-      localStorage.setItem(MOCK_STORAGE_KEYS.USER, JSON.stringify(user));
-    } catch (e) {
-      console.warn('Storage error', e);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+    } catch {
+      // Storage error suppressed
     }
   },
 
   recordAccountVisit(): void {
     try {
-      localStorage.setItem(MOCK_STORAGE_KEYS.CART_VISIT, new Date().toISOString());
+      localStorage.setItem(STORAGE_KEYS.CART_VISIT, new Date().toISOString());
     } catch {
       // ignore
     }
   },
 
+  /**
+   * Protected Customer Order History with strict IDOR mitigation:
+   * Only permits access if the active session matches requested UID or holds ADMIN_SUPER token
+   */
   getCustomerOrders(uid: string): CustomerOrderRecord[] {
     const cleanUid = normalizePakistaniPhone(uid);
+    const currentUser = this.getCurrentUser();
+    const adminToken = securityService.getActiveAdminToken();
+
+    // IDOR Protection: Validate authorization claims
+    const isOwner = currentUser && currentUser.uid === cleanUid;
+    const isAdmin = Boolean(adminToken);
+
+    if (!isOwner && !isAdmin) {
+      // Unauthorized direct object access attempt blocked
+      return [];
+    }
+
     try {
-      const raw = localStorage.getItem(`${MOCK_STORAGE_KEYS.ORDERS}_${cleanUid}`);
+      const raw = localStorage.getItem(`${STORAGE_KEYS.ORDERS}_${cleanUid}`);
       if (raw) {
         return JSON.parse(raw);
       }
@@ -778,17 +515,25 @@ export const mbApiService = {
       // ignore
     }
 
-    return SEED_ORDERS[cleanUid] || [];
+    return [];
   },
 
   appendCustomerOrder(uid: string, order: CustomerOrderRecord): void {
     const cleanUid = normalizePakistaniPhone(uid);
-    const existing = this.getCustomerOrders(cleanUid);
+    let existing: CustomerOrderRecord[] = [];
+    try {
+      const raw = localStorage.getItem(`${STORAGE_KEYS.ORDERS}_${cleanUid}`);
+      if (raw) {
+        existing = JSON.parse(raw);
+      }
+    } catch {
+      // Storage read error suppressed
+    }
     const updated = [order, ...existing];
     try {
-      localStorage.setItem(`${MOCK_STORAGE_KEYS.ORDERS}_${cleanUid}`, JSON.stringify(updated));
-    } catch (e) {
-      console.warn('Order storage error', e);
+      localStorage.setItem(`${STORAGE_KEYS.ORDERS}_${cleanUid}`, JSON.stringify(updated));
+    } catch {
+      // Order storage error suppressed
     }
   },
 };

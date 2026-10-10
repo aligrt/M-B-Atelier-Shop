@@ -83,10 +83,10 @@ export const Hero: React.FC<HeroProps> = ({ onShopModel1, onExploreCatalog }) =>
               <span className="text-xs font-mono font-bold text-[#C5832B] mb-2">[3]</span>
               <div>
                 <h3 className="font-display font-extrabold text-base sm:text-lg text-[#16181B] leading-tight">
-                  Sialkot Tough. D2C Smooth. 1-Year Local Warranty.
+                  Sialkot Tough. D2C Smooth. Open-Parcel Inspected.
                 </h3>
                 <p className="text-xs text-neutral-700 mt-2">
-                  Reinforced box-bartack stitching backed by free repair pickup and open-parcel COD.
+                  Reinforced box-bartack stitching backed by doorstep courier inspection before paying COD.
                 </p>
               </div>
             </div>
@@ -117,7 +117,7 @@ export const Hero: React.FC<HeroProps> = ({ onShopModel1, onExploreCatalog }) =>
             </h2>
 
             <p className="text-base text-neutral-300 max-w-xl leading-relaxed">
-              Engineered for Bike Commuters, Rain, & Heavy Tech. 1-Year Local Warranty.
+              Engineered for Bike Commuters, Rain, & Heavy Tech. Doorstep Open Parcel Guarantee.
               Built with heavy-duty 1000D ballistic Oxford, weather-sealed zippers, and instant rainproofing.
             </p>
 

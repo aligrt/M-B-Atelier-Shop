@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Check, Star, ShieldCheck, Zap, ShoppingBag, Scale } from 'lucide-react';
-import { Product } from '../types';
+import { Product, CurrencyCode } from '../types';
+import { formatCurrency } from '../utils/currency';
 
 interface ProductComparisonModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface ProductComparisonModalProps {
   onBuyNow: (product: Product) => void;
   allProducts: Product[];
   onAddProduct: (product: Product) => void;
+  currency?: CurrencyCode;
 }
 
 export const ProductComparisonModal: React.FC<ProductComparisonModalProps> = ({
@@ -22,6 +24,7 @@ export const ProductComparisonModal: React.FC<ProductComparisonModalProps> = ({
   onBuyNow,
   allProducts,
   onAddProduct,
+  currency = 'PKR',
 }) => {
   if (!isOpen) return null;
 
@@ -295,7 +298,7 @@ export const ProductComparisonModal: React.FC<ProductComparisonModalProps> = ({
                       ))}
                     </tr>
 
-                    {/* Local Warranty & Open Parcel */}
+                    {/* Quality & Doorstep Open Parcel Guarantee */}
                     <tr>
                       <td className="py-3.5 px-3 font-semibold text-neutral-300 bg-[#14171A]/40">
                         Protection Guarantee
@@ -304,7 +307,7 @@ export const ProductComparisonModal: React.FC<ProductComparisonModalProps> = ({
                         <td key={p.id} className="py-3.5 px-3 text-emerald-400 font-medium border-l border-[#2B3038]/60">
                           <div className="flex items-center gap-1.5">
                             <ShieldCheck className="w-3.5 h-3.5" />
-                            <span>1-Yr Sialkot Warranty + Open Parcel COD</span>
+                            <span>Doorstep Open-Parcel Inspection + Free COD</span>
                           </div>
                         </td>
                       ))}

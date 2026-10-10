@@ -40,7 +40,7 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ onTrackOrder }) => {
             Frequently Asked Questions
           </h2>
           <p className="text-sm text-neutral-400 mt-2">
-            Everything you need to know about Cash on Delivery, doorstep inspection, and our Sialkot & Lahore warranty.
+            Everything you need to know about Cash on Delivery, doorstep inspection, and our Sialkot & Lahore craftsmanship standards.
           </p>
         </div>
 

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { AnnouncementBar } from './components/AnnouncementBar';
+import { CampaignAnnouncementBar } from './components/CampaignAnnouncementBar';
 import { ReturningCustomerBanner } from './components/ReturningCustomerBanner';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -21,17 +21,33 @@ import { OrderSuccessModal } from './components/OrderSuccessModal';
 import { FloatingWhatsApp } from './components/FloatingWhatsApp';
 import { AccountPage } from './components/AccountPage';
 import { WhatsAppAuthModal } from './components/WhatsAppAuthModal';
-import { Product, CartItem, OrderDetails } from './types';
+import { AiChatbotDrawer } from './components/AiChatbotDrawer';
+import { AdminOperationsSuite } from './components/AdminOperationsSuite';
+import { Honeypot404 } from './components/Honeypot404';
+import { Product, CartItem, OrderDetails, CurrencyCode } from './types';
 import {
   CustomerUser,
   CustomerOffer,
   mbApiService,
 } from './services/api';
+import { storeStateService } from './services/storeStateService';
+import { securityService } from './services/securityService';
 import { Check } from 'lucide-react';
 
 export default function App() {
   // Navigation / Route state: 'home' or 'account'
   const [currentPage, setCurrentPage] = useState<'home' | 'account'>('home');
+
+  // Multi-Currency Converter state (PKR, USD, GBP, EUR)
+  const [currency, setCurrency] = useState<CurrencyCode>('PKR');
+
+  // Dynamic Catalog State managed via storeStateService
+  const [products, setProducts] = useState<Product[]>(() => {
+    return storeStateService.getProducts();
+  });
+
+  // Admin Operations Suite modal state
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   // Customer Auth state (WhatsApp as UID)
   const [currentUser, setCurrentUser] = useState<CustomerUser | null>(() => {
@@ -71,44 +87,82 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeTrackingId, setActiveTrackingId] = useState<string | null>(null);
 
-  // Handle URL hash or path on initial load (e.g. /account or #account)
+  // Reconnaissance Decoy State (404 Honeypot)
+  const [isReconnaissanceDecoy, setIsReconnaissanceDecoy] = useState(false);
+  const [probedPath, setProbedPath] = useState('');
+
+  // Handle URL hash, query parameters, or reconnaissance probe
   useEffect(() => {
-    const checkHash = () => {
-      const path = window.location.hash || window.location.pathname;
-      if (path.includes('account')) {
+    const evaluateRoutingSecurity = () => {
+      const currentPath = window.location.pathname;
+      const currentHash = window.location.hash;
+      const currentSearch = window.location.search;
+
+      // 1. Thwart Reconnaissance Scanners (/admin, /wp-admin, /login, /dashboard, etc.)
+      if (securityService.isReconnaissanceRoute(currentPath) || securityService.isReconnaissanceRoute(currentHash)) {
+        setProbedPath(currentPath !== '/' ? currentPath : currentHash);
+        setIsReconnaissanceDecoy(true);
+        return;
+      }
+
+      // 2. Secret Authorized Gateway Access (?sec_portal=gateway-portal-x99 or #gateway-portal-x99)
+      if (securityService.isAuthorizedGateway(currentSearch, currentHash)) {
+        setIsAdminOpen(true);
+        // Clean URL parameter without refreshing to obscure presence from history
+        try {
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+        } catch {
+          // ignore
+        }
+      }
+
+      // 3. Customer Account Portal
+      if (currentPath.includes('account') || currentHash.includes('account')) {
         setCurrentPage('account');
       }
     };
-    checkHash();
-    window.addEventListener('hashchange', checkHash);
-    return () => window.removeEventListener('hashchange', checkHash);
+
+    evaluateRoutingSecurity();
+    window.addEventListener('hashchange', evaluateRoutingSecurity);
+    window.addEventListener('popstate', evaluateRoutingSecurity);
+
+    return () => {
+      window.removeEventListener('hashchange', evaluateRoutingSecurity);
+      window.removeEventListener('popstate', evaluateRoutingSecurity);
+    };
+  }, []);
+
+  // Obscure Administrator Hotkey Chord: Ctrl + Shift + A (or Cmd + Shift + A)
+  useEffect(() => {
+    const handleKeyChord = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        setIsAdminOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyChord);
+    return () => window.removeEventListener('keydown', handleKeyChord);
   }, []);
 
   // Save Cart to storage
   useEffect(() => {
     try {
       localStorage.setItem('mb_atelier_cart', JSON.stringify(cart));
-    } catch (e) {
-      console.warn('Failed to save cart to localStorage', e);
+    } catch {
+      // Storage write error suppressed
     }
   }, [cart]);
 
   // Flow 3: Returning customer strategy (Discount trigger)
-  // On load or auth change, query GET /api/customer/offers
   useEffect(() => {
     const fetchOffers = async () => {
       try {
         const offers = await mbApiService.getOffers(currentUser?.uid, cart.length > 0);
         setActiveOffers(offers);
-        // If returning user has a 10% coupon and no coupon currently applied, keep it ready
-        if (offers.length > 0 && !appliedCoupon) {
-          const retOffer = offers.find((o) => o.code === 'RETURNING10');
-          if (retOffer) {
-            // Can be applied by user
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to fetch offers', e);
+      } catch {
+        // Fallback offer fetching error suppressed
       }
     };
 
@@ -175,15 +229,20 @@ export default function App() {
     setLastPlacedOrder(order);
     try {
       localStorage.setItem('mb_atelier_last_order', JSON.stringify(order));
-    } catch (e) {
-      console.warn('Failed to save last order', e);
+    } catch {
+      // Storage error suppressed
     }
+    // Save order into StoreStateService
+    storeStateService.saveOrder(order);
+    // Refresh products stock
+    setProducts(storeStateService.getProducts());
+
     setIsCartOpen(false);
     setCart([]); // Clear cart upon successful order
     setAppliedCoupon(null);
   };
 
-  const handleUserAuthenticated = (user: CustomerUser, token: string) => {
+  const handleUserAuthenticated = (user: CustomerUser) => {
     setCurrentUser(user);
     showToast(`Welcome ${user.name || `+${user.uid}`}! WhatsApp verified.`);
   };
@@ -232,13 +291,9 @@ export default function App() {
   };
 
   const handleShopModel1 = () => {
-    const model1El = document.getElementById('model-1-metro');
+    const model1El = document.getElementById('model-metro-commuter') || document.getElementById('shop');
     if (model1El) {
       model1El.scrollIntoView({ behavior: 'smooth' });
-      model1El.classList.add('ring-4', 'ring-[#C88D76]');
-      setTimeout(() => {
-        model1El.classList.remove('ring-4', 'ring-[#C88D76]');
-      }, 1500);
     } else {
       scrollToSection('shop');
     }
@@ -265,10 +320,32 @@ export default function App() {
 
   const totalCartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
+  // Reconnaissance Probe Honeypot: Return generic 404 to deceive scanners
+  if (isReconnaissanceDecoy) {
+    return (
+      <Honeypot404
+        attemptedPath={probedPath}
+        onReturnToStore={() => {
+          setIsReconnaissanceDecoy(false);
+          setProbedPath('');
+          window.location.hash = '';
+          try {
+            window.history.replaceState({}, '', '/');
+          } catch {
+            // ignore
+          }
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#14171A] text-neutral-100 selection:bg-[#C88D76] selection:text-neutral-950">
-      {/* 1. Global Announcement Bar */}
-      <AnnouncementBar />
+    <div className="min-h-screen flex flex-col bg-[#14171A] text-neutral-100 selection:bg-[#C5832B] selection:text-neutral-950">
+      {/* 1. Global Campaign Announcement Bar with Live Countdown */}
+      <CampaignAnnouncementBar
+        onScrollToSection={scrollToSection}
+        currency={currency}
+      />
 
       {/* 2. Returning Customer Strategy Sticky Banner (Flow 3) */}
       {currentUser && activeOffers.length > 0 && !isBannerDismissed && (
@@ -281,7 +358,7 @@ export default function App() {
         />
       )}
 
-      {/* 3. Navigation Bar */}
+      {/* 3. Navigation Bar (Public: Zero Admin References) */}
       <Navbar
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
@@ -289,6 +366,8 @@ export default function App() {
         currentUser={currentUser}
         onOpenAccount={navigateToAccount}
         onTriggerAuth={() => setIsAuthModalOpen(true)}
+        currency={currency}
+        onCurrencyChange={setCurrency}
       />
 
       {/* Main Content Area: Route Switching between Home and /account */}
@@ -309,14 +388,16 @@ export default function App() {
             onExploreCatalog={() => scrollToSection('shop')}
           />
 
-          {/* Trust Badges */}
+          {/* Quality Pillars & Trust Badges */}
           <TrustBadges />
 
-          {/* Product Catalog */}
+          {/* Dynamic Product Catalog */}
           <ProductCatalog
+            products={products}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
             onSelectProduct={(product) => setSelectedProduct(product)}
+            currency={currency}
           />
 
           {/* Craftsmanship & Why Us */}
@@ -336,10 +417,10 @@ export default function App() {
         </main>
       )}
 
-      {/* Footer */}
+      {/* Footer (Public: Zero Admin References) */}
       <Footer onScrollToSection={scrollToSection} />
 
-      {/* Cash on Delivery Checkout Drawer */}
+      {/* Cart & Checkout Slide-Over Drawer */}
       <CartCheckoutDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
@@ -347,68 +428,61 @@ export default function App() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
         onOrderSuccess={handleOrderSuccess}
-        onContinueShopping={() => {
-          if (currentPage !== 'home') setCurrentPage('home');
-          scrollToSection('shop');
-        }}
+        onContinueShopping={() => setIsCartOpen(false)}
         currentUser={currentUser}
         onUserAuthenticated={handleUserAuthenticated}
         activeOffers={activeOffers}
         appliedCoupon={appliedCoupon}
-        onApplyCoupon={(code) => setAppliedCoupon(code)}
+        onApplyCoupon={(c) => setAppliedCoupon(c)}
       />
 
-      {/* Standalone WhatsApp Auth Modal */}
-      <WhatsAppAuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onAuthenticated={(user, token) => {
-          setIsAuthModalOpen(false);
-          handleUserAuthenticated(user, token);
-          if (currentPage === 'account') {
-            // Already navigated
-          }
-        }}
-      />
-
-      {/* Product Detail Modal */}
+      {/* Product Deep Dive Specs Modal */}
       <ProductDetailModal
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
         onAddToCart={handleAddToCart}
         onBuyNow={handleBuyNow}
+        currency={currency}
       />
 
-      {/* Order Confirmed Modal */}
+      {/* Order Confirmation Success Modal */}
       <OrderSuccessModal
         order={confirmedOrder}
         onClose={() => setConfirmedOrder(null)}
-        onTrackOrder={(orderId) => {
-          setConfirmedOrder(null);
-          handleTrackFromFaq(orderId);
-        }}
+        onTrackOrder={handleTrackFromFaq}
       />
 
-      {/* Floating WhatsApp Button */}
+      {/* WhatsApp OTP Authentication Modal */}
+      <WhatsAppAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={handleUserAuthenticated}
+      />
+
+      {/* Dual Support: 1. AI Chatbot Drawer & 2. WhatsApp Direct Action */}
+      <AiChatbotDrawer />
+
+      {/* WhatsApp Floating Trigger for Quick Message */}
       <FloatingWhatsApp />
+
+      {/* ERP Operations Suite Modal */}
+      <AdminOperationsSuite
+        isOpen={isAdminOpen}
+        onClose={() => setIsAdminOpen(false)}
+        products={products}
+        onProductsUpdated={setProducts}
+        currency={currency}
+        onCurrencyChange={setCurrency}
+      />
 
       {/* Toast Notification */}
       {toastMessage && (
-        <aside
-          aria-label="Notification"
-          className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-[#1C2025] text-white border border-[#C88D76]/50 px-4 py-3 rounded-xl shadow-2xl text-xs sm:text-sm animate-in slide-in-from-bottom duration-200"
-        >
-          <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-            <Check className="w-3.5 h-3.5" />
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-[#1C2025] text-white border border-[#C5832B] px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <Check className="w-3 h-3" />
           </div>
           <span>{toastMessage}</span>
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="ml-2 text-[#E2B29F] font-semibold underline underline-offset-2 hover:text-white transition-colors cursor-pointer"
-          >
-            View Cart
-          </button>
-        </aside>
+        </div>
       )}
     </div>
   );

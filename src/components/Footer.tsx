@@ -74,10 +74,10 @@ export const Footer: React.FC<FooterProps> = ({ onScrollToSection }) => {
               </li>
               <li>
                 <button
-                  onClick={() => onScrollToSection('warranty')}
+                  onClick={() => onScrollToSection('why-us')}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
-                  1-Year Local Warranty Policy
+                  Quality Standards & Sialkot Tough
                 </button>
               </li>
               <li>

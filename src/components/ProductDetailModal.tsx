@@ -1,12 +1,14 @@
 import React from 'react';
 import { X, Check, Star, ShieldCheck, Zap, ShoppingBag } from 'lucide-react';
-import { Product } from '../types';
+import { Product, CurrencyCode } from '../types';
+import { formatCurrency } from '../utils/currency';
 
 interface ProductDetailModalProps {
   product: Product | null;
   onClose: () => void;
   onAddToCart: (product: Product) => void;
   onBuyNow: (product: Product) => void;
+  currency?: CurrencyCode;
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
@@ -14,6 +16,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onClose,
   onAddToCart,
   onBuyNow,
+  currency = 'PKR',
 }) => {
   if (!product) return null;
 
@@ -85,10 +88,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
                 <div className="py-2.5 px-3 bg-[#14171A] rounded-lg border border-[#2B3038] inline-flex items-baseline gap-3">
                   <span className="font-display font-extrabold text-xl text-[#E2B29F] tabular-nums">
-                    PKR {product.price.toLocaleString()}
+                    {formatCurrency(product.price, currency)}
                   </span>
                   <span className="text-xs text-neutral-400 line-through tabular-nums">
-                    PKR {product.originalPrice.toLocaleString()}
+                    {formatCurrency(product.originalPrice, currency)}
                   </span>
                   <span className="text-[11px] text-emerald-400 font-semibold">
                     Free COD Nationwide
@@ -103,29 +106,29 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 Technical Specifications
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                <div className="p-3 bg-[#14171A] border border-[#2B3038] rounded-xl">
-                  <span className="text-neutral-500 block mb-0.5">Capacity</span>
-                  <strong className="text-white">{product.specs.capacity}</strong>
+                <div className="p-3 bg-[#14171A] rounded-lg border border-[#2B3038]">
+                  <span className="text-neutral-500 block text-[10px]">Capacity</span>
+                  <span className="font-semibold text-white">{product.specs.capacity}</span>
                 </div>
-                <div className="p-3 bg-[#14171A] border border-[#2B3038] rounded-xl">
-                  <span className="text-neutral-500 block mb-0.5">Dry Weight</span>
-                  <strong className="text-white">{product.specs.weight}</strong>
+                <div className="p-3 bg-[#14171A] rounded-lg border border-[#2B3038]">
+                  <span className="text-neutral-500 block text-[10px]">Empty Weight</span>
+                  <span className="font-semibold text-white">{product.specs.weight}</span>
                 </div>
-                <div className="p-3 bg-[#14171A] border border-[#2B3038] rounded-xl">
-                  <span className="text-neutral-500 block mb-0.5">Laptop Fit</span>
-                  <strong className="text-white">{product.specs.laptopFit}</strong>
+                <div className="p-3 bg-[#14171A] rounded-lg border border-[#2B3038]">
+                  <span className="text-neutral-500 block text-[10px]">Laptop Core</span>
+                  <span className="font-semibold text-white">{product.specs.laptopFit}</span>
                 </div>
-                <div className="p-3 bg-[#14171A] border border-[#2B3038] rounded-xl">
-                  <span className="text-neutral-500 block mb-0.5">Material Architecture</span>
-                  <strong className="text-white">{product.specs.material}</strong>
+                <div className="p-3 bg-[#14171A] rounded-lg border border-[#2B3038]">
+                  <span className="text-neutral-500 block text-[10px]">Shell Fabric</span>
+                  <span className="font-semibold text-white">{product.specs.material}</span>
                 </div>
-                <div className="p-3 bg-[#14171A] border border-[#2B3038] rounded-xl">
-                  <span className="text-neutral-500 block mb-0.5">Dimensions</span>
-                  <strong className="text-white">{product.specs.dimensions}</strong>
+                <div className="p-3 bg-[#14171A] rounded-lg border border-[#2B3038]">
+                  <span className="text-neutral-500 block text-[10px]">Dimensions</span>
+                  <span className="font-semibold text-white">{product.specs.dimensions}</span>
                 </div>
-                <div className="p-3 bg-[#14171A] border border-[#2B3038] rounded-xl">
-                  <span className="text-neutral-500 block mb-0.5">Water Resistance</span>
-                  <strong className="text-white">{product.specs.waterproofRating}</strong>
+                <div className="p-3 bg-[#14171A] rounded-lg border border-[#2B3038]">
+                  <span className="text-neutral-500 block text-[10px]">Weather Rating</span>
+                  <span className="font-semibold text-white">{product.specs.waterproofRating}</span>
                 </div>
               </div>
             </div>
@@ -160,7 +163,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   onBuyNow(product);
                   onClose();
                 }}
-                className="py-3 px-4 bg-gradient-to-r from-[#DF9B84] to-[#C88D76] hover:from-[#F0C0B0] hover:to-[#D49D87] text-neutral-950 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                className="py-3 px-4 bg-gradient-to-r from-[#DF9B84] to-[#C5832B] hover:from-[#F0C0B0] hover:to-[#D49D87] text-neutral-950 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
                 <Zap className="w-4 h-4 fill-neutral-950" />
                 <span>Buy Now (Instant COD)</span>

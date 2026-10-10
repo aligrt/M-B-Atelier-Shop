@@ -29,16 +29,16 @@ export const TrustBadges: React.FC = () => {
       id: 3,
       icon: Award,
       badgeTag: 'Pillar [3]',
-      title: 'Sialkot Tough. D2C Smooth. 1-Year Local Warranty.',
-      subtitle: 'Reinforced box-bartack stitching with doorstep open-parcel inspection.',
+      title: 'Sialkot Tough. D2C Smooth. Open-Parcel Guaranteed.',
+      subtitle: 'Reinforced box-bartack stitching with doorstep inspection before paying COD.',
       detail:
-        'Sialkot world-class sporting and tactical heritage brought directly to Pakistani professionals without middleman markups. If any zip or stitch gives out within 365 days, we pick up and repair free of charge.',
-      highlights: ['1-Year Local Sialkot warranty', 'Open-parcel inspection before paying COD', 'Direct-to-consumer transparent pricing'],
+        'Sialkot world-class tactical and sporting manufacturing brought directly to Pakistani professionals without middleman markups. Heavy-duty YKK zips, 1000D Oxford ballistic weave, and open-parcel inspection before paying a single rupee.',
+      highlights: ['Sialkot military-grade box-bartack stitching', 'Open-parcel inspection before paying COD', 'Direct-to-consumer transparent pricing'],
     },
   ];
 
   return (
-    <section id="warranty" className="bg-[#16181B] py-10 sm:py-14 border-b border-[#252A30]">
+    <section id="why-us" className="bg-[#16181B] py-10 sm:py-14 border-b border-[#252A30]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -47,10 +47,10 @@ export const TrustBadges: React.FC = () => {
             Built for Pakistani Realities
           </p>
           <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Our 3 Uncompromising Guarantees
+            Our 3 Uncompromising Quality Pillars
           </h2>
           <p className="text-sm text-neutral-400 mt-2">
-            No drop-shipping gimmicks. Sialkot tough, Lahore designed, and guaranteed for 365 days.
+            No drop-shipping gimmicks. Sialkot tough, Lahore designed, and doorstep open-parcel verified.
           </p>
         </div>
 
