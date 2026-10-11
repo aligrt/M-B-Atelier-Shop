@@ -221,33 +221,34 @@ class SecurityService {
       };
     }
 
-    const cleanIdentifier = identifier.trim().toLowerCase();
-    const cleanPass = passInput.trim();
+    try {
+      const response = await fetch('/api/v1/auth/gateway-portal-x99', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: identifier.trim(),
+          password: passInput.trim(),
+          gatewayToken: 'gateway-portal-x99',
+        }),
+      });
 
-    const validIdentifiers = [
-      SECURITY_CONFIG.ADMIN_EMAIL_PRIMARY.toLowerCase(),
-      SECURITY_CONFIG.ADMIN_EMAIL_SECONDARY.toLowerCase(),
-      'admin',
-      'master',
-    ];
+      const data = await response.json();
+      if (response.ok && data.success) {
+        return { success: true };
+      }
 
-    const isUserValid = validIdentifiers.includes(cleanIdentifier);
-
-    // Cryptographic comparison (supporting mbatelier2026, admin123, or custom hash)
-    const isPassValid =
-      cleanPass === 'mbatelier2026' ||
-      cleanPass === 'admin123' ||
-      cleanPass === 'MB@telier#2026_Sec';
-
-    if (!isUserValid || !isPassValid) {
       this.recordFailedAttempt();
       return {
         success: false,
-        error: 'Invalid administrative credentials. Access attempt logged in Zero-Trust audit ledger.',
+        error: data.error || 'Invalid administrative credentials. Access attempt logged in Zero-Trust audit ledger.',
+      };
+    } catch {
+      // If server unreachable, block access
+      return {
+        success: false,
+        error: 'Security gateway service unavailable. Please check server connectivity.',
       };
     }
-
-    return { success: true };
   }
 
   // -------------------------------------------------------------

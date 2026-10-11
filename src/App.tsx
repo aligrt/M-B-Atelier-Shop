@@ -169,6 +169,26 @@ export default function App() {
     fetchOffers();
   }, [currentUser, cart.length]);
 
+  // Load authoritative product catalog from server API
+  useEffect(() => {
+    const fetchCatalog = async () => {
+      try {
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const liveProducts = await res.json();
+          if (Array.isArray(liveProducts) && liveProducts.length > 0) {
+            setProducts(liveProducts);
+            storeStateService.saveProducts(liveProducts);
+          }
+        }
+      } catch {
+        // Use local fallback
+      }
+    };
+
+    fetchCatalog();
+  }, []);
+
   // Toast auto-dismiss
   useEffect(() => {
     if (toastMessage) {

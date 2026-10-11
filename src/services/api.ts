@@ -149,49 +149,20 @@ export const mbApiService = {
   ): Promise<{ success: boolean; token: string; user: CustomerUser; isNewUser: boolean }> {
     const normalized = normalizePakistaniPhone(phone);
 
-    try {
-      const response = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: normalized, otp }),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        this.saveAuthSession(data.token, data.user);
-        return data;
-      }
-    } catch {
-      // Fallback
+    const response = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: normalized, otp }),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || 'Invalid verification code. Please check your SMS/WhatsApp and try again.');
     }
 
-    if (otp !== '123456' && otp.length !== 6) {
-      throw new Error('Invalid OTP. Please enter the 6-digit code received on WhatsApp (Test OTP: 123456)');
-    }
-
-    const savedUserStr = localStorage.getItem(`${STORAGE_KEYS.USER}_${normalized}`);
-    let user: CustomerUser;
-    let isNewUser = true;
-
-    if (savedUserStr) {
-      user = JSON.parse(savedUserStr);
-      isNewUser = false;
-    } else {
-      user = {
-        uid: normalized,
-        phone: formatPakistaniPhoneDisplay(normalized),
-      };
-      localStorage.setItem(`${STORAGE_KEYS.USER}_${normalized}`, JSON.stringify(user));
-    }
-
-    const mockJwt = `mb_jwt_${normalized}_${Date.now()}`;
-    this.saveAuthSession(mockJwt, user);
-
-    return {
-      success: true,
-      token: mockJwt,
-      user,
-      isNewUser,
-    };
+    const data = await response.json();
+    this.saveAuthSession(data.token, data.user);
+    return data;
   },
 
   /**
@@ -219,71 +190,31 @@ export const mbApiService = {
     const sanitizedNotes = params.deliveryNotes ? securityService.sanitizeInput(params.deliveryNotes) : undefined;
     const csrfToken = securityService.getCsrfToken();
 
-    try {
-      const response = await fetch('/api/orders/place', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken,
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({
-          ...params,
-          customerName: sanitizedName,
-          address: sanitizedAddress,
-          city: sanitizedCity,
-          deliveryNotes: sanitizedNotes,
-          phone: normalizedPhone,
-          requestOpenParcel: params.requestOpenParcel ?? true,
-        }),
-      });
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch {
-      // Serverless fallback
-    }
-
-    const orderId = `MBA-${Math.floor(1000 + Math.random() * 9000)}`;
-    const itemsSummary = params.items.map((i) => `${i.product.name} (x${i.quantity})`).join(', ');
-    const itemCount = params.items.reduce((acc, i) => acc + i.quantity, 0);
-
-    const newOrder: CustomerOrderRecord = {
-      orderId,
-      date: new Date().toISOString().split('T')[0],
-      itemsSummary,
-      itemCount,
-      total: params.total,
-      status: 'COD Pending',
-      paymentMethod: 'Cash on Delivery',
-      city: sanitizedCity,
-      deliveryAddress: sanitizedAddress,
-      courierName: params.courierName || 'Trax Logistics',
-      courierTrackingNumber: `TRX-PK-${Math.floor(1000000 + Math.random() * 9000000)}`,
-      courierTrackingUrl: `https://sonic.trax.pk/tracking?tracking_number=TRX-PK-${Math.floor(1000000 + Math.random() * 9000000)}`,
-      canInspectParcel: true,
-      openParcelRequested: params.requestOpenParcel ?? true,
-    };
-
-    this.appendCustomerOrder(normalizedPhone, newOrder);
-
-    // Save profile address if logged in
-    const currentUser = this.getCurrentUser();
-    if (currentUser && currentUser.uid === normalizedPhone) {
-      const updatedUser: CustomerUser = {
-        ...currentUser,
-        name: sanitizedName,
+    const response = await fetch('/api/orders/place', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+      body: JSON.stringify({
+        ...params,
+        customerName: sanitizedName,
         address: sanitizedAddress,
         city: sanitizedCity,
-      };
-      this.updateUserProfile(updatedUser);
+        deliveryNotes: sanitizedNotes,
+        phone: normalizedPhone,
+        requestOpenParcel: params.requestOpenParcel ?? true,
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data;
     }
 
-    return {
-      success: true,
-      orderId,
-      order: newOrder,
-    };
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || 'Failed to place order with server.');
   },
 
   /**

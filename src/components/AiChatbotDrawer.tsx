@@ -112,7 +112,7 @@ export const AiChatbotDrawer: React.FC = () => {
             <Bot className="w-4 h-4 text-[#C5832B]" />
           </div>
           <span className="text-xs font-bold tracking-wide">
-            {isOpen ? 'Close Concierge' : 'Atelier AI Chat'}
+            {isOpen ? 'Close Concierge' : 'Atelier Concierge'}
           </span>
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
         </button>
@@ -130,9 +130,9 @@ export const AiChatbotDrawer: React.FC = () => {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-display font-bold text-sm text-white">M&B AI Concierge</h3>
+                  <h3 className="font-display font-bold text-sm text-white">M&B Customer Concierge</h3>
                   <span className="px-1.5 py-0.2 text-[9px] font-extrabold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800 rounded">
-                    Live
+                    Active
                   </span>
                 </div>
                 <p className="text-[11px] text-neutral-400">

@@ -140,6 +140,26 @@ export const AdminOperationsSuite: React.FC<AdminOperationsSuiteProps> = ({
     setIdleRemainingSeconds(15 * 60);
     lastActivityRef.current = Date.now();
     setSessionNotice(null);
+
+    // Fetch authoritative ERP data from server
+    fetch('/api/admin/data', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          if (data.products) {
+            onProductsUpdated(data.products);
+          }
+          if (data.couriers) setCouriers(data.couriers);
+          if (data.promoCodes) setPromoCodes(data.promoCodes);
+          if (data.campaignBanner) setCampaignBanner(data.campaignBanner);
+          if (data.expenses) setExpenses(data.expenses);
+          if (data.stockMovements) setStockLogs(data.stockMovements);
+          if (data.orders) setOrders(data.orders);
+        }
+      })
+      .catch(() => {});
   };
 
   const handleSecureLogout = (notice?: string) => {
